@@ -1,0 +1,11 @@
+.invertedField>label {
+    color: white !important;
+}
+
+.invertedField>div {
+    color: white;
+}
+
+.invertedField>div>fieldset {
+    border-color: white !important;
+}

@@ -1,12 +1,71 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
+import { initializeApp } from 'firebase/app';
+
+import './index.css';
+
+import HomePage from './pages/home';
+import NotFoundPage from './pages/notFound';
+import BoardPage from './pages/board';
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
+
+/*
+
+TODO:
+  - local delete (from localStorage)
+  - drag n drop, smart solution for mobile
+  - git clone (local copy)
+  - icon
+
+*/
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBnyTbJHZLs2fNSkRWtFthZAV1faV_3Nas",
+  authDomain: "wichtige-notizen.firebaseapp.com",
+  databaseURL: "https://wichtige-notizen-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "wichtige-notizen",
+  storageBucket: "wichtige-notizen.appspot.com",
+  messagingSenderId: "517135488735",
+  appId: "1:517135488735:web:a6184e6e33072dfa3afb6a"
+};
+
+initializeApp(firebaseConfig);
+
+if (localStorage.getItem('localBoards') === null) {
+  localStorage.setItem('localBoards', '[]');
+}
+if (localStorage.getItem('sharedBoards') === null) {
+  localStorage.setItem('sharedBoards', '[]');
+}
+
+function AnimationRoute() {
+  const location = useLocation();
+
+  return (
+    <TransitionGroup>
+      <CSSTransition
+        key={location.pathname}
+        classNames='slide'
+        timeout={500}>
+        <Routes location={location}>
+          <Route path='/' element={<HomePage />} />
+          <Route path='/board' element={<BoardPage />} />
+          <Route path='*' element={<NotFoundPage />} />
+        </Routes>
+      </CSSTransition>
+    </TransitionGroup>
+  );
+}
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Router>
+      <Routes>
+        <Route path='*' element={<AnimationRoute />} />
+      </Routes>
+    </Router>
   </React.StrictMode>,
   document.getElementById('root')
 );
