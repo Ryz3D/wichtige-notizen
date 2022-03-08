@@ -14,10 +14,12 @@ import { CSSTransition, TransitionGroup } from 'react-transition-group';
 /*
 
 TODO:
-  - local delete (from localStorage)
+  - list delete
+  - local board delete (from localStorage)
   - drag n drop, smart solution for mobile
-  - git clone (local copy)
+  - 'git' clone (local copy)
   - icon
+  - help page
 
 */
 

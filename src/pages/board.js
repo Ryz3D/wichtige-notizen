@@ -1,7 +1,7 @@
 import React from 'react';
 import * as mui from '@mui/material';
 import { Link } from 'react-router-dom';
-import { getDatabase, ref, get, set } from 'firebase/database';
+import { getDatabase, ref, onValue, set } from 'firebase/database';
 import QRCode from "react-qr-code";
 import BoardData from '../components/boardData';
 import { Buffer } from 'buffer';
@@ -57,28 +57,27 @@ class BoardPage extends React.Component {
                 if (!this.state.new) {
                     const localData = localStorage.getItem(this.state.id);
                     if (localData === null) {
-                        get(ref(this.db, `${this.state.id}`))
-                            .then(v => {
-                                if (v.val() === null) {
-                                    this.setState({
-                                        loading: false,
-                                        error: 'Das Board existiert nicht :(',
-                                    });
-                                }
-                                else {
-                                    this.setState({
-                                        name: v.val().name,
-                                        data: Object.values(v.val().data || {}),
-                                        loading: false,
-                                        online: true,
-                                    }, _ => {
-                                        const sharedBoards = JSON.parse(localStorage.getItem('sharedBoards'));
-                                        if (sharedBoards.findIndex(p => p === this.state.id) === -1) {
-                                            this.addAsShared();
-                                        }
-                                    });
-                                }
-                            });
+                        onValue(ref(this.db, `${this.state.id}`), v => {
+                            if (v.val() === null) {
+                                this.setState({
+                                    loading: false,
+                                    error: 'Das Board existiert nicht :(',
+                                });
+                            }
+                            else {
+                                this.setState({
+                                    name: v.val().name,
+                                    data: Object.values(v.val().data || {}),
+                                    loading: false,
+                                    online: true,
+                                }, _ => {
+                                    const sharedBoards = JSON.parse(localStorage.getItem('sharedBoards'));
+                                    if (sharedBoards.findIndex(p => p === this.state.id) === -1) {
+                                        this.addAsShared();
+                                    }
+                                });
+                            }
+                        });
                     } else {
                         const parsedData = JSON.parse(localData);
                         this.setState({
@@ -132,7 +131,7 @@ class BoardPage extends React.Component {
                 this.onDataChange(this.state.data);
             }
             this.setState({
-                notification: 'Name Saved!',
+                notification: 'Name gespeichert!',
             });
         }
     }
