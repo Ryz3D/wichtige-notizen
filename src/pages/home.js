@@ -1,7 +1,7 @@
 import React from 'react';
 import * as mui from '@mui/material';
-import { Link } from 'react-router-dom';
 import { getDatabase, ref, onValue } from 'firebase/database';
+import LinkButton from '../components/linkButton';
 
 class HomePage extends React.Component {
     constructor(props) {
@@ -140,10 +140,9 @@ class HomePage extends React.Component {
                                 {this.state.localBoards.map((b, i) =>
                                     <mui.ListItem divider key={i}>
                                         <mui.ButtonGroup fullWidth>
-                                            <mui.Button size='large' fullWidth variant='outlined'
-                                                component={Link} to={`/board?id=${b.id}`} style={btnStyle}>
+                                            <LinkButton size='large' variant='outlined' style={btnStyle} url={`/board?id=${b.id}`}>
                                                 {b.name}
-                                            </mui.Button>
+                                            </LinkButton>
                                             <mui.Button color='error' style={{ width: '50px' }} onClick={_ => this.deleteLocal(b)}>
                                                 <mui.Icon>delete</mui.Icon>
                                             </mui.Button>
@@ -152,12 +151,11 @@ class HomePage extends React.Component {
                                 )}
                                 <mui.ListItem>
                                     <mui.Tooltip title='Neues Board'>
-                                        <mui.Button size='large' fullWidth variant='outlined'
-                                            component={Link} to={`/board`}>
+                                        <LinkButton size='large' fullWidth variant='outlined' url={`/board`}>
                                             <mui.Typography variant='h5'>
                                                 +
                                             </mui.Typography>
-                                        </mui.Button>
+                                        </LinkButton>
                                     </mui.Tooltip>
                                 </mui.ListItem>
                             </mui.List>
@@ -171,11 +169,10 @@ class HomePage extends React.Component {
                             <mui.List>
                                 {this.state.sharedBoards.map((b, i) =>
                                     <mui.ListItem key={i} divider={i < this.state.sharedBoards.length - 1}>
-                                        <mui.ButtonGroup>
-                                            <mui.Button size='large' fullWidth variant='outlined'
-                                                component={Link} to={`/board?id=${b.id}`} style={btnStyle}>
+                                        <mui.ButtonGroup fullWidth>
+                                            <LinkButton size='large' variant='outlined' style={btnStyle} url={`/board?id=${b.id}`}>
                                                 {b.name}
-                                            </mui.Button>
+                                            </LinkButton>
                                             <mui.Button color='error' style={{ width: '50px' }} onClick={_ => this.deleteShared(b)}>
                                                 <mui.Icon>delete</mui.Icon>
                                             </mui.Button>

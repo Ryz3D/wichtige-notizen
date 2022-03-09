@@ -5,6 +5,7 @@ import { getDatabase, ref, onValue, set } from 'firebase/database';
 import QRCode from "react-qr-code";
 import BoardData from '../components/boardData';
 import { Buffer } from 'buffer';
+import { v4 as uuidv4 } from 'uuid';
 import './board.css';
 
 class BoardPage extends React.Component {
@@ -119,10 +120,12 @@ class BoardPage extends React.Component {
     onNameKey(e) {
         if (e.keyCode === 13 && this.state.name.replace(/\W/g, '') !== '') {
             if (this.state.id === '') {
-                // TODO: GLOBALLY UNIQUE ID
                 this.setState({
-                    id: Date.now().toString(),
-                }, _ => this.onDataChange(this.state.data));
+                    id: uuidv4().replaceAll('-', ''),
+                }, _ => {
+                    this.onDataChange(this.state.data);
+                    window.location.href = `/board?id=${this.state.id}`;
+                });
             }
             if (this.state.online) {
                 set(ref(this.db, `${this.state.id}/name`), this.state.name);
