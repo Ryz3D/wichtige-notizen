@@ -1,7 +1,8 @@
 import React from 'react';
 import * as mui from '@mui/material';
-import { getDatabase, ref, onValue } from 'firebase/database';
+import routerNavigate from '../components/routerNavigate';
 import LinkButton from '../components/linkButton';
+import { getDatabase, ref, onValue } from 'firebase/database';
 
 class HomePage extends React.Component {
     constructor(props) {
@@ -14,6 +15,7 @@ class HomePage extends React.Component {
             deleteLocal: '',
             deleteShared: '',
             deleteName: '',
+            notification: '',
         };
         this.sharedToLoad = 1;
     }
@@ -102,6 +104,20 @@ class HomePage extends React.Component {
         }, _ => this.reloadBoards());
     }
 
+    clipboardPaste() {
+        navigator.clipboard.readText()
+            .then(text => {
+                const clipboardID = text.match(/(?<=\/board\?id=)\w+/g);
+                if (clipboardID !== null) {
+                    this.props.navigate(`/board?id=${clipboardID}`);
+                }
+                else {
+                    this.setState({ notification: 'Kein Board-Link kopiert' });
+                }
+            })
+            .catch(_ => this.setState({ notification: 'Kein Zugriff auf Zwischenablage' }));
+    }
+
     render() {
         const rootStyle = {
             backgroundColor: '#fff',
@@ -122,6 +138,14 @@ class HomePage extends React.Component {
                         <mui.Typography variant='h2' marginY='10px'>
                             Alle Boards
                         </mui.Typography>
+                        <mui.Tooltip title='Kopierten Link öffnen'>
+                            <mui.IconButton style={{ color: 'white', marginLeft: '5px' }}
+                                size='large' onClick={_ => this.clipboardPaste()}>
+                                <mui.Icon>
+                                    content_paste_go
+                                </mui.Icon>
+                            </mui.IconButton>
+                        </mui.Tooltip>
                     </mui.Toolbar>
                 </mui.AppBar>
                 {this.state.loading ?
@@ -209,6 +233,12 @@ class HomePage extends React.Component {
                                 </mui.ButtonGroup>
                             </mui.Box>
                         </mui.Popover>
+
+                        <mui.Snackbar
+                            open={this.state.notification !== ''}
+                            autoHideDuration={1000}
+                            onClose={_ => this.setState({ notification: '' })}
+                            message={this.state.notification} />
                     </>
                 }
             </div>
@@ -216,4 +246,4 @@ class HomePage extends React.Component {
     }
 }
 
-export default HomePage;
+export default routerNavigate(HomePage);

@@ -1,6 +1,7 @@
 import React from 'react';
 import * as mui from '@mui/material';
 import { isMobile } from 'react-device-detect';
+import { Buffer } from 'buffer';
 
 class BoardEntry extends React.Component {
     constructor(props) {
@@ -65,7 +66,8 @@ class BoardEntry extends React.Component {
                             label='Text' onContextMenu={this.props.onContext} value={this.state.text} onChange={e => this.onChange(e)} />
                         :
                         <mui.Button fullWidth style={btnStyle} variant={(this.props.data || {}).h ? 'contained' : 'outlined'}
-                            onContextMenu={this.props.onContext} onClick={this.props.onClick}>
+                            onContextMenu={this.props.onContext} onClick={this.props.onClick} disabled={this.props.disabled}
+                            color={this.props.thisMove ? 'success' : (this.props.itemMove ? 'warning' : 'primary')}>
                             {this.fillIfEmpty(this.props.children || (this.props.data || {}).t)}
                         </mui.Button>
                     }
@@ -87,7 +89,13 @@ class BoardData extends React.Component {
             justAdded: false,
             entryMenuAnchor: null,
             deleteList: -1,
+            itemMove: false,
+            downloadSrc: '',
+            downloadName: '',
         };
+
+        this.downloadRef = React.createRef();
+        this.uploadRef = React.createRef();
     }
 
     addList() {
@@ -114,7 +122,7 @@ class BoardData extends React.Component {
 
     editClear() {
         const isEmpty = (this.state.editData || { t: '' }).t.replace(/[ \t\r\n]/g, '') === '';
-        if (this.state.editList !== -1 && this.state.editItem !== -1 && this.state.justAdded && (this.state.editData === null || isEmpty)) {
+        if (this.state.editList !== -1 && this.state.editItem !== -1 && (this.state.editData === null ? this.state.justAdded : isEmpty)) {
             this.editDelete();
         }
 
@@ -126,23 +134,42 @@ class BoardData extends React.Component {
     }
 
     editItem(e, i, i2) {
-        const editState = {
-            editList: i,
-            editItem: i2,
-            editData: null,
-            justAdded: false,
-        };
-        if (isMobile) {
-            console.log(e.currentTarget.parentNode)
+        if (this.state.itemMove) {
+            if (this.state.menuList !== -1 && this.state.menuItem !== -1) {
+                const tempData = JSON.parse(JSON.stringify(this.props.data));
+                const item = tempData[this.state.menuList].splice(this.state.menuItem, 1)[0];
+                tempData[i] = [
+                    ...tempData[i].slice(0, i2),
+                    item,
+                    ...tempData[i].slice(i2),
+                ];
+                this.props.onDataChange(tempData);
+            }
             this.setState({
-                ...editState,
-                menuList: i,
-                menuItem: i2,
-                entryMenuAnchor: e.currentTarget.parentNode,
+                menuList: -1,
+                menuItem: -1,
+                entryMenuAnchor: null,
+                itemMove: false,
             });
         }
         else {
-            this.setState(editState);
+            const editState = {
+                editList: i,
+                editItem: i2,
+                editData: null,
+                justAdded: false,
+            };
+            if (isMobile) {
+                this.setState({
+                    ...editState,
+                    menuList: i,
+                    menuItem: i2,
+                    entryMenuAnchor: e.currentTarget.parentNode,
+                });
+            }
+            else {
+                this.setState(editState);
+            }
         }
     }
 
@@ -167,7 +194,7 @@ class BoardData extends React.Component {
 
     editSave() {
         const isEmpty = (this.state.editData || { t: '' }).t.replace(/[ \t\r\n]/g, '') === '';
-        if (this.state.editList !== -1 && this.state.editItem !== -1 && this.state.justAdded && (this.state.editData === null || isEmpty)) {
+        if (this.state.editList !== -1 && this.state.editItem !== -1 && (this.state.editData === null ? this.state.justAdded : isEmpty)) {
             this.editDelete();
         }
         if (this.state.editData !== null && !isEmpty) {
@@ -231,6 +258,13 @@ class BoardData extends React.Component {
         this.menuClose();
     }
 
+    menuMove() {
+        this.setState({
+            itemMove: true,
+            entryMenuAnchor: null,
+        });
+    }
+
     deleteList() {
         const tempData = JSON.parse(JSON.stringify(this.props.data));
         tempData.splice(this.state.deleteList, 1);
@@ -238,6 +272,53 @@ class BoardData extends React.Component {
         this.setState({
             deleteList: -1,
         });
+    }
+
+    export() {
+        var data = '';
+        for (var i = 0; ; i++) {
+            var allDone = true;
+            var dataRow = '';
+            for (var lists of this.props.data) {
+                if (lists[i]) {
+                    dataRow += `"${lists[i].t}",`;
+                    allDone = false;
+                }
+                else {
+                    dataRow += ',';
+                }
+            }
+            if (allDone) {
+                break;
+            }
+            else {
+                data += dataRow.slice(0, -1) + '\n';
+            }
+        }
+        const based = Buffer.from(data).toString('base64');
+        this.setState({
+            downloadSrc: `data:text/plain;base64,${based}`,
+            downloadName: `${this.props.name}.csv`,
+        }, _ => this.downloadRef.current.click());
+    }
+
+    import(e) {
+        if (e.target.files) {
+            if (e.target.files[0]) {
+                const fr = new FileReader();
+                fr.onloadend = e2 => {
+                    for (var line of e2.target.result.replace('\r', '').split('\n')) {
+                        const entries = [...line.matchAll(/(?<=")[^,]*?(?=")/g)].map(m => m[0]);
+                        console.log(entries); // TODO: CSV PARSER
+                    }
+                };
+                fr.readAsText(e.target.files[0]);
+            }
+        }
+    }
+
+    backup() {
+        // TODO: CLONE, SAVE (RENAME) AND OPEN
     }
 
     render() {
@@ -252,6 +333,7 @@ class BoardData extends React.Component {
         const itemMenu = [
             ['delete', 'Löschen', _ => this.menuDelete()],
             ['border_color', 'Markieren', _ => this.menuHighlight()],
+            ['control_camera', 'Verschieben', _ => this.menuMove()],
         ].map((e, i) =>
             <mui.MenuItem key={i} onClick={e[2]}>
                 <mui.ListItemIcon>
@@ -268,9 +350,10 @@ class BoardData extends React.Component {
                         <mui.List key={i}>
                             {d.map((e, i2) =>
                                 <BoardEntry key={i2} onClick={e => this.editItem(e, i, i2)} onContext={e => this.menuItem(e, i, i2)} onNext={_ => this.editNext()} onClear={_ => this.editClear()}
-                                    set={d => this.editSet(d)} save={_ => this.editSave()} edit={this.state.editList === i && this.state.editItem === i2} data={e} />
+                                    set={d => this.editSet(d)} save={_ => this.editSave()} edit={this.state.editList === i && this.state.editItem === i2} data={e} itemMove={this.state.itemMove}
+                                    thisMove={(this.state.entryMenuAnchor !== null || this.state.itemMove) && i === this.state.menuList && i2 === this.state.menuItem} />
                             )}
-                            <BoardEntry onClick={_ => this.addItem(i)}>
+                            <BoardEntry disabled={this.state.itemMove} onClick={_ => this.addItem(i)}>
                                 + Notiz
                             </BoardEntry>
                             <mui.ListItem>
@@ -283,24 +366,46 @@ class BoardData extends React.Component {
                         </mui.List>
                     )}
                     <mui.List>
-                        <BoardEntry onClick={_ => this.addList()}>
+                        <BoardEntry disabled={this.state.itemMove} onClick={_ => this.addList()}>
                             + Liste
                         </BoardEntry>
                     </mui.List>
                 </mui.Stack>
                 {isMobile ?
-                    <mui.Popper disableEnforceFocus={true} disableScrollLock={true} disableAutoFocus={true}
-                        open={this.state.entryMenuAnchor !== null} anchorEl={this.state.entryMenuAnchor}>
-                        <mui.MenuList style={{ background: 'white', border: '#eee solid 3px', borderRadius: '5px' }}>
-                            {itemMenu}
-                        </mui.MenuList>
-                    </mui.Popper>
+                    <>
+                        <div style={{ height: '70px' }} />
+                        <mui.Popper disableEnforceFocus={true} disableScrollLock={true} disableAutoFocus={true}
+                            open={this.state.entryMenuAnchor !== null} anchorEl={this.state.entryMenuAnchor}>
+                            <mui.MenuList style={{ background: 'white', border: '#eee solid 3px', borderRadius: '5px' }}>
+                                {itemMenu}
+                            </mui.MenuList>
+                        </mui.Popper>
+                    </>
                     :
                     <mui.Menu open={this.state.entryMenuAnchor !== null} anchorEl={this.state.entryMenuAnchor}
                         onClose={_ => this.setState({ entryMenuAnchor: null })}>
                         {itemMenu}
                     </mui.Menu>
                 }
+                <mui.SpeedDial
+                    ariaLabel=''
+                    style={{ position: 'fixed', bottom: '40px', right: '40px' }}
+                    icon={<mui.SpeedDialIcon icon={<mui.Icon>more_vert</mui.Icon>} openIcon={<mui.Icon>close</mui.Icon>} />}>
+                    {[
+                        ['CSV-Export', 'download', _ => this.export()],
+                        ['CSV-Import', 'attach_file', _ => this.uploadRef.current.click()],
+                        ['Lokale Kopie', 'backup_table', _ => this.backup()],
+                    ].map((e, i) => (
+                        <mui.SpeedDialAction
+                            key={i}
+                            tooltipTitle={e[0]}
+                            icon={<mui.Icon>{e[1]}</mui.Icon>}
+                            onClick={e[2]}
+                        />
+                    ))}
+                </mui.SpeedDial>
+                <a ref={this.downloadRef} href={this.state.downloadSrc} download={this.state.downloadName} style={{ display: 'none' }}>csv</a>
+                <input ref={this.uploadRef} type='file' style={{ display: 'none' }} onChange={e => this.import(e)} />
                 <mui.Popover open={this.state.deleteList > -1}>
                     <mui.Box padding='30px'>
                         <mui.Typography variant='h4'>

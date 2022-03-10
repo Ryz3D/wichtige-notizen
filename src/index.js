@@ -14,16 +14,11 @@ import { CSSTransition, TransitionGroup } from 'react-transition-group';
 /*
 
 TODO:
-  - csv export and import (marker?)
+  - move into new list
+  - icon
   - board buttons cancel item edit
   - when adding new list, don't clear input during onValue update
-  - move lists
-    - edit mode toggle -> drag n drop + L/R buttons
   - add edited item on + click/touch
-  - scroll further on mobile (url bar)
-  - drag n drop, smart solution for mobile
-  - 'git' clone (local copy)
-  - icon
   - help page
     - versioning
 

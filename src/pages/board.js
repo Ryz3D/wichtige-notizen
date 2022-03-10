@@ -1,12 +1,13 @@
 import React from 'react';
 import * as mui from '@mui/material';
 import { Link } from 'react-router-dom';
+import BoardData from '../components/boardData';
+import routerNavigate from '../components/routerNavigate';
+import './board.css';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
 import QRCode from "react-qr-code";
-import BoardData from '../components/boardData';
 import { Buffer } from 'buffer';
 import { v4 as uuidv4 } from 'uuid';
-import './board.css';
 
 class BoardPage extends React.Component {
     constructor(props) {
@@ -23,6 +24,7 @@ class BoardPage extends React.Component {
             qrSrc: '',
             shareOpen: false,
             notification: '',
+            lastData: [],
         };
         this.qrRef = React.createRef();
     }
@@ -111,6 +113,14 @@ class BoardPage extends React.Component {
         this.addAsShared();
     }
 
+    undo() {
+        const history = JSON.parse(JSON.stringify(this.state.lastData));
+        const last = history.pop();
+        this.setState({
+            lastData: history,
+        }, _ => this.onDataChange(last, true));
+    }
+
     onNameChange(e) {
         this.setState({
             name: e.target.value,
@@ -124,7 +134,7 @@ class BoardPage extends React.Component {
                     id: uuidv4().replaceAll('-', ''),
                 }, _ => {
                     this.onDataChange(this.state.data);
-                    window.location.href = `/board?id=${this.state.id}`;
+                    this.props.navigate(`/board?id=${this.state.id}`, { replace: true });
                 });
             }
             if (this.state.online) {
@@ -139,7 +149,7 @@ class BoardPage extends React.Component {
         }
     }
 
-    onDataChange(data) {
+    onDataChange(data, noHistory) {
         if (this.state.id !== '') {
             if (this.state.online) {
                 set(ref(this.db, `${this.state.id}/data`), data);
@@ -153,7 +163,13 @@ class BoardPage extends React.Component {
                 localStorage.setItem(this.state.id, JSON.stringify({ name: this.state.name, data }));
             }
         }
-        this.setState({ data });
+        this.setState({
+            data,
+            lastData: noHistory ? this.state.lastData : [
+                ...this.state.lastData,
+                this.state.data,
+            ].slice(-10),
+        });
     }
 
     render() {
@@ -194,14 +210,23 @@ class BoardPage extends React.Component {
                                 </mui.Icon>
                             </mui.IconButton>
                         </mui.Tooltip>
+                        <mui.Tooltip title='Rückgängig'>
+                            <mui.IconButton disabled={this.state.lastData.length === 0}
+                                style={{ color: this.state.lastData.length === 0 ? '' : 'white', marginLeft: '5px' }} size='large' onClick={_ => this.undo()}>
+                                <mui.Icon>
+                                    undo
+                                </mui.Icon>
+                            </mui.IconButton>
+                        </mui.Tooltip>
                     </mui.Toolbar>
                     <mui.TextField fullWidth variant='outlined' label='Name' className='invertedField'
                         value={this.state.name} onChange={e => this.onNameChange(e)} onKeyDown={e => this.onNameKey(e)} />
                 </mui.AppBar>
 
-                <BoardData data={this.state.data} onDataChange={data => this.onDataChange(data)} />
+                <BoardData name={this.state.name} data={this.state.data} onDataChange={data => this.onDataChange(data)} />
 
-                <mui.Popover open={this.state.shareOpen} anchorOrigin={{ horizontal: 'right', vertical: 'top' }}>
+                <mui.Popover open={this.state.shareOpen} onClose={_ => this.setState({ shareOpen: false })}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'top' }}>
                     <mui.Box padding='20px'>
                         <mui.Typography variant='h4'>
                             Board ist online
@@ -250,4 +275,4 @@ class BoardPage extends React.Component {
     }
 }
 
-export default BoardPage;
+export default routerNavigate(BoardPage);
