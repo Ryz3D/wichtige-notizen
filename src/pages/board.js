@@ -8,6 +8,7 @@ import { getDatabase, ref, onValue, set } from 'firebase/database';
 import QRCode from "react-qr-code";
 import { Buffer } from 'buffer';
 import { v4 as uuidv4 } from 'uuid';
+import Hotkeys from 'react-hot-keys';
 
 class BoardPage extends React.Component {
     constructor(props) {
@@ -116,9 +117,11 @@ class BoardPage extends React.Component {
     undo() {
         const history = JSON.parse(JSON.stringify(this.state.lastData));
         const last = history.pop();
-        this.setState({
-            lastData: history,
-        }, _ => this.onDataChange(last, true));
+        if (last) {
+            this.setState({
+                lastData: history,
+            }, _ => this.onDataChange(last, true));
+        }
     }
 
     onNameChange(e) {
@@ -189,98 +192,112 @@ class BoardPage extends React.Component {
         };
 
         return (
-            <div style={rootStyle}>
-                <mui.AppBar position='static'>
-                    <mui.Toolbar>
-                        <mui.Tooltip title='Alle Boards'>
-                            <mui.IconButton style={{ color: 'white', marginRight: '5px' }} size='large' component={Link} to='/'>
-                                <mui.Icon>
-                                    arrow_back_rounded
+            <>
+                <Hotkeys
+                    keyName='ctrl+z'
+                    allowRepeat
+                    onKeyDown={_ => this.undo()}
+                />
+                <Hotkeys
+                    keyName='ctrl+y'
+                    onKeyDown={_ => this.share()}
+                />
+                <div style={rootStyle}>
+                    <mui.AppBar position='static'>
+                        <mui.Toolbar>
+                            <mui.Tooltip title='Alle Boards'>
+                                <mui.IconButton style={{ color: 'white', marginRight: '5px' }} size='large' component={Link} to='/'>
+                                    <mui.Icon>
+                                        arrow_back_rounded
+                                    </mui.Icon>
+                                </mui.IconButton>
+                            </mui.Tooltip>
+                            <mui.Typography variant='h2' marginY='10px'>
+                                Board
+                            </mui.Typography>
+                            <mui.Tooltip title={this.state.online ? 'Online' : 'Offline'}>
+                                <mui.Icon fontSize='large' color={this.state.online ? '' : 'disabled'}
+                                    style={{ color: this.state.online ? '#0c0' : '', marginLeft: '10px' }}>
+                                    {this.state.online ? 'circle' : 'offline_bolt'}
                                 </mui.Icon>
-                            </mui.IconButton>
-                        </mui.Tooltip>
-                        <mui.Typography variant='h2' marginY='10px'>
-                            Board
-                        </mui.Typography>
-                        <mui.Tooltip title={this.state.online ? 'Online' : 'Offline'}>
-                            <mui.Icon fontSize='large' color={this.state.online ? '' : 'disabled'}
-                                style={{ color: this.state.online ? '#0c0' : '', marginLeft: '10px' }}>
-                                {this.state.online ? 'circle' : 'offline_bolt'}
-                            </mui.Icon>
-                        </mui.Tooltip>
-                        <mui.Tooltip title='Board teilen'>
-                            <span>
-                                <mui.IconButton disabled={this.state.id === ''}
-                                    style={{ color: this.state.id === '' ? '' : 'white', marginLeft: '5px' }} size='large' onClick={_ => this.share()}>
-                                    <mui.Icon>
-                                        share
-                                    </mui.Icon>
-                                </mui.IconButton>
-                            </span>
-                        </mui.Tooltip>
-                        <mui.Tooltip title='Rückgängig'>
-                            <span>
-                                <mui.IconButton disabled={this.state.lastData.length === 0}
-                                    style={{ color: this.state.lastData.length === 0 ? '' : 'white', marginLeft: '5px' }} size='large' onClick={_ => this.undo()}>
-                                    <mui.Icon>
-                                        undo
-                                    </mui.Icon>
-                                </mui.IconButton>
-                            </span>
-                        </mui.Tooltip>
-                    </mui.Toolbar>
-                    <mui.TextField fullWidth variant='outlined' label='Name' className='invertedField'
-                        value={this.state.name} onChange={e => this.onNameChange(e)} onKeyDown={e => this.onNameKey(e)} />
-                </mui.AppBar>
+                            </mui.Tooltip>
+                            <mui.Tooltip title='Board teilen'>
+                                <span>
+                                    <mui.IconButton disabled={this.state.id === ''}
+                                        style={{ color: this.state.id === '' ? '' : 'white', marginLeft: '5px' }} size='large' onClick={_ => this.share()}>
+                                        <mui.Icon>
+                                            share
+                                        </mui.Icon>
+                                    </mui.IconButton>
+                                </span>
+                            </mui.Tooltip>
+                            <mui.Tooltip title='Rückgängig'>
+                                <span>
+                                    <mui.IconButton disabled={this.state.lastData.length === 0}
+                                        style={{ color: this.state.lastData.length === 0 ? '' : 'white', marginLeft: '5px' }} size='large' onClick={_ => this.undo()}>
+                                        <mui.Icon>
+                                            undo
+                                        </mui.Icon>
+                                    </mui.IconButton>
+                                </span>
+                            </mui.Tooltip>
+                        </mui.Toolbar>
+                        <mui.TextField fullWidth variant='outlined' label='Name' className='invertedField'
+                            value={this.state.name} onChange={e => this.onNameChange(e)} onKeyDown={e => this.onNameKey(e)} />
+                    </mui.AppBar>
 
-                <BoardData name={this.state.name} data={this.state.data} onDataChange={data => this.onDataChange(data)} />
+                    <BoardData name={this.state.name} data={this.state.data} onDataChange={data => this.onDataChange(data)} />
 
-                <mui.Popover open={this.state.shareOpen} onClose={_ => this.setState({ shareOpen: false })}
-                    anchorOrigin={{ horizontal: 'right', vertical: 'top' }}>
-                    <mui.Box padding='20px'>
-                        <mui.Typography variant='h4'>
-                            Board ist online
-                        </mui.Typography>
-                        <br />
-                        Teile diesen Link (klicken zum kopieren):
-                        <mui.Link marginLeft='5px' style={{ cursor: 'pointer' }} onClick={_ => this.copyLink()}>
-                            {`https://wichtige-notizen.web.app/board?id=${this.state.id}`}
-                        </mui.Link>
-                        <br />
-                        <img src={this.state.qrSrc} alt='qr' style={{ display: 'block', margin: '20px auto' }} />
-                        <mui.Button fullWidth variant='outlined' onClick={_ => this.setState({ shareOpen: false })}
-                            startIcon={<mui.Icon>close</mui.Icon>}>
-                            Schließen
-                        </mui.Button>
-                    </mui.Box>
-                </mui.Popover>
-                <div ref={this.qrRef}>
-                    <QRCode style={{ display: 'none' }} value={`https://wichtige-notizen.web.app/board?id=${this.state.id}`} />
-                </div>
-
-                <mui.Popover open={this.state.error !== ''} anchorOrigin={{ horizontal: 'center', vertical: 'top' }}>
-                    <mui.Box padding='40px'>
-                        <mui.Typography variant='h4' color='error'>
-                            Error
-                        </mui.Typography>
-                        <br />
-                        {this.state.error}
-                        <br />
-                        <mui.Box marginTop='20px'>
-                            <mui.Button variant='outlined' component={Link} to='/'
-                                startIcon={<mui.Icon>arrow_back_rounded</mui.Icon>}>
-                                Zurück
+                    <mui.Popover open={this.state.shareOpen} onClose={_ => this.setState({ shareOpen: false })} BackdropProps
+                        anchorOrigin={{ horizontal: 'center', vertical: 'top' }}
+                        transformOrigin={{ horizontal: 'center', vertical: 'top' }}>
+                        <mui.Box padding='20px'>
+                            <mui.Typography variant='h4'>
+                                Board ist online
+                            </mui.Typography>
+                            <br />
+                            Teile diesen Link (klicken zum kopieren):
+                            <mui.Link marginLeft='5px' style={{ cursor: 'pointer' }} onClick={_ => this.copyLink()}>
+                                {`https://wichtige-notizen.web.app/board?id=${this.state.id}`}
+                            </mui.Link>
+                            <br />
+                            <img src={this.state.qrSrc} alt='qr' style={{ display: 'block', margin: '20px auto' }} />
+                            <mui.Button fullWidth variant='outlined' onClick={_ => this.setState({ shareOpen: false })}
+                                startIcon={<mui.Icon>close</mui.Icon>}>
+                                Schließen
                             </mui.Button>
                         </mui.Box>
-                    </mui.Box>
-                </mui.Popover>
+                    </mui.Popover>
+                    <div ref={this.qrRef}>
+                        <QRCode style={{ display: 'none' }} value={`https://wichtige-notizen.web.app/board?id=${this.state.id}`} />
+                    </div>
 
-                <mui.Snackbar
-                    open={this.state.notification !== ''}
-                    autoHideDuration={1000}
-                    onClose={_ => this.setState({ notification: '' })}
-                    message={this.state.notification} />
-            </div >
+                    <mui.Popover open={this.state.error !== ''} BackdropProps
+                        anchorOrigin={{ horizontal: 'center', vertical: 'top' }}
+                        transformOrigin={{ horizontal: 'center', vertical: 'top' }}>
+                        <mui.Box padding='40px'>
+                            <mui.Typography variant='h4' color='error'>
+                                Error
+                            </mui.Typography>
+                            <br />
+                            {this.state.error}
+                            <br />
+                            <mui.Box marginTop='20px'>
+                                <mui.Button variant='outlined' component={Link} to='/'
+                                    startIcon={<mui.Icon>arrow_back_rounded</mui.Icon>}>
+                                    Zurück
+                                </mui.Button>
+                            </mui.Box>
+                        </mui.Box>
+                    </mui.Popover>
+
+                    <mui.Snackbar
+                        open={this.state.notification !== ''}
+                        autoHideDuration={1000}
+                        onClose={_ => this.setState({ notification: '' })}
+                        message={this.state.notification} />
+                </div>
+            </>
         );
     }
 }

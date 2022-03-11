@@ -2,7 +2,9 @@ import React from 'react';
 import * as mui from '@mui/material';
 import routerNavigate from '../components/routerNavigate';
 import LinkButton from '../components/linkButton';
+import HelpPopover from '../components/helpPopover';
 import { getDatabase, ref, onValue } from 'firebase/database';
+import Hotkeys from 'react-hot-keys';
 
 class HomePage extends React.Component {
     constructor(props) {
@@ -16,6 +18,7 @@ class HomePage extends React.Component {
             deleteShared: '',
             deleteName: '',
             notification: '',
+            help: false,
         };
         this.sharedToLoad = 1;
     }
@@ -134,111 +137,127 @@ class HomePage extends React.Component {
         };
 
         return (
-            <div style={rootStyle}>
-                <mui.AppBar position='static'>
-                    <mui.Toolbar>
-                        <mui.Typography variant='h2' marginY='10px'>
-                            Alle Boards
-                        </mui.Typography>
-                        <mui.Tooltip title='Kopierten Link öffnen'>
-                            <mui.IconButton style={{ color: 'white', marginLeft: '5px' }}
-                                size='large' onClick={_ => this.clipboardPaste()}>
-                                <mui.Icon>
-                                    content_paste_go
-                                </mui.Icon>
-                            </mui.IconButton>
-                        </mui.Tooltip>
-                    </mui.Toolbar>
-                </mui.AppBar>
-                {this.state.loading ?
-                    <mui.Box flex display='flex' justifyContent='center' marginTop='15vh'>
-                        <mui.CircularProgress thickness={1} size={80} />
-                    </mui.Box>
-                    :
-                    <>
-                        <div style={{ marginBottom: '3vh' }}>
-                            {(this.state.localBoards || {}).length === 0 &&
-                                <mui.Alert severity='info'>
-                                    Du hast keine Boards
-                                </mui.Alert>
-                            }
-                            <mui.List>
-                                {this.state.localBoards.map((b, i) =>
-                                    <mui.ListItem divider key={i}>
-                                        <mui.ButtonGroup fullWidth>
-                                            <LinkButton size='large' variant='outlined' style={btnStyle} url={`/board?id=${b.id}`}>
-                                                {b.name}
-                                            </LinkButton>
-                                            <mui.Button color='error' style={{ width: '50px' }} onClick={_ => this.deleteLocal(b)}>
-                                                <mui.Icon>delete</mui.Icon>
-                                            </mui.Button>
-                                        </mui.ButtonGroup>
-                                    </mui.ListItem>
-                                )}
-                                <mui.ListItem>
-                                    <LinkButton tooltip='Neues Board' size='large' fullWidth variant='outlined' url={`/board`}>
-                                        <mui.Typography variant='h5'>
-                                            +
-                                        </mui.Typography>
-                                    </LinkButton>
-                                </mui.ListItem>
-                            </mui.List>
-                        </div>
-                        <div style={{ marginBottom: '3vh' }}>
-                            {this.state.sharedBoards.length > 0 &&
-                                <mui.Typography variant='h4' marginTop='3vh' marginLeft='15px'>
-                                    Geteilte Boards
-                                </mui.Typography>
-                            }
-                            <mui.List>
-                                {this.state.sharedBoards.map((b, i) =>
-                                    <mui.ListItem key={i} divider={i < this.state.sharedBoards.length - 1}>
-                                        <mui.ButtonGroup fullWidth>
-                                            <LinkButton size='large' variant='outlined' style={btnStyle} url={`/board?id=${b.id}`}>
-                                                {b.name}
-                                            </LinkButton>
-                                            <mui.Button color='error' style={{ width: '50px' }} onClick={_ => this.deleteShared(b)}>
-                                                <mui.Icon>delete</mui.Icon>
-                                            </mui.Button>
-                                        </mui.ButtonGroup>
-                                    </mui.ListItem>
-                                )}
-                            </mui.List>
-                        </div>
-                        <mui.Popover open={this.state.deleteLocal !== '' || this.state.deleteShared !== ''}>
-                            <mui.Box padding='30px'>
-                                <mui.Typography variant='h3'>
-                                    Board löschen?
-                                </mui.Typography>
-                                <br />
-                                {this.state.deleteShared !== '' &&
-                                    <><b>"{this.state.deleteName}"</b> ist ein öffentliches Board, du kannst über den Link wieder darauf zugreifen.</>
+            <>
+                <Hotkeys
+                    keyName='ctrl+v'
+                    onKeyDown={_ => this.clipboardPaste()}
+                />
+                <div style={rootStyle}>
+                    <mui.AppBar position='static'>
+                        <mui.Toolbar>
+                            <mui.Typography variant='h2' marginY='10px'>
+                                Alle Boards
+                            </mui.Typography>
+                            <mui.Tooltip title='Kopierten Link öffnen'>
+                                <mui.IconButton style={{ color: 'white', marginLeft: '5px' }}
+                                    size='large' onClick={_ => this.clipboardPaste()}>
+                                    <mui.Icon>
+                                        content_paste_go
+                                    </mui.Icon>
+                                </mui.IconButton>
+                            </mui.Tooltip>
+                            <mui.Tooltip title='Hilfe'>
+                                <mui.IconButton style={{ color: 'white', marginLeft: '5px' }}
+                                    size='large' onClick={_ => this.setState({ help: true })}>
+                                    <mui.Icon>
+                                        help
+                                    </mui.Icon>
+                                </mui.IconButton>
+                            </mui.Tooltip>
+                        </mui.Toolbar>
+                    </mui.AppBar>
+                    {this.state.loading ?
+                        <mui.Box flex display='flex' justifyContent='center' marginTop='15vh'>
+                            <mui.CircularProgress thickness={1} size={80} />
+                        </mui.Box>
+                        :
+                        <>
+                            <div style={{ marginBottom: '3vh' }}>
+                                {(this.state.localBoards || {}).length === 0 &&
+                                    <mui.Alert severity='info'>
+                                        Du hast keine Boards
+                                    </mui.Alert>
                                 }
-                                {this.state.deleteLocal &&
-                                    <><b>"{this.state.deleteName}"</b> ist ein lokales Board, es wird für immer vernichtet.</>
+                                <mui.List>
+                                    {this.state.localBoards.map((b, i) =>
+                                        <mui.ListItem divider key={i}>
+                                            <mui.ButtonGroup fullWidth>
+                                                <LinkButton size='large' variant='outlined' style={btnStyle} url={`/board?id=${b.id}`}>
+                                                    {b.name}
+                                                </LinkButton>
+                                                <mui.Button color='error' style={{ width: '50px' }} onClick={_ => this.deleteLocal(b)}>
+                                                    <mui.Icon>delete</mui.Icon>
+                                                </mui.Button>
+                                            </mui.ButtonGroup>
+                                        </mui.ListItem>
+                                    )}
+                                    <mui.ListItem>
+                                        <LinkButton tooltip='Neues Board' size='large' fullWidth variant='outlined' url={`/board`}>
+                                            <mui.Typography variant='h5'>
+                                                +
+                                            </mui.Typography>
+                                        </LinkButton>
+                                    </mui.ListItem>
+                                </mui.List>
+                            </div>
+                            <div style={{ marginBottom: '3vh' }}>
+                                {this.state.sharedBoards.length > 0 &&
+                                    <mui.Typography variant='h4' marginTop='3vh' marginLeft='15px'>
+                                        Geteilte Boards
+                                    </mui.Typography>
                                 }
-                                <br />
-                                <br />
-                                <mui.ButtonGroup>
-                                    <mui.Button variant='outlined' onClick={_ => this.setState({ deleteLocal: '', deleteShared: '' })}>
-                                        Abbrechen
-                                    </mui.Button>
-                                    <mui.Button variant='contained' color='error' onClick={_ => this.deleteFinal()}>
-                                        <mui.Icon>delete</mui.Icon>
-                                        Wech damit
-                                    </mui.Button>
-                                </mui.ButtonGroup>
-                            </mui.Box>
-                        </mui.Popover>
+                                <mui.List>
+                                    {this.state.sharedBoards.map((b, i) =>
+                                        <mui.ListItem key={i} divider={i < this.state.sharedBoards.length - 1}>
+                                            <mui.ButtonGroup fullWidth>
+                                                <LinkButton size='large' variant='outlined' style={btnStyle} url={`/board?id=${b.id}`}>
+                                                    {b.name}
+                                                </LinkButton>
+                                                <mui.Button color='error' style={{ width: '50px' }} onClick={_ => this.deleteShared(b)}>
+                                                    <mui.Icon>delete</mui.Icon>
+                                                </mui.Button>
+                                            </mui.ButtonGroup>
+                                        </mui.ListItem>
+                                    )}
+                                </mui.List>
+                            </div>
+                            <mui.Popover open={this.state.deleteLocal !== '' || this.state.deleteShared !== ''}>
+                                <mui.Box padding='30px'>
+                                    <mui.Typography variant='h3'>
+                                        Board löschen?
+                                    </mui.Typography>
+                                    <br />
+                                    {this.state.deleteShared !== '' &&
+                                        <><b>"{this.state.deleteName}"</b> ist ein öffentliches Board, du kannst über den Link wieder darauf zugreifen.</>
+                                    }
+                                    {this.state.deleteLocal &&
+                                        <><b>"{this.state.deleteName}"</b> ist ein lokales Board, es wird für immer vernichtet.</>
+                                    }
+                                    <br />
+                                    <br />
+                                    <mui.ButtonGroup>
+                                        <mui.Button variant='outlined' onClick={_ => this.setState({ deleteLocal: '', deleteShared: '' })}>
+                                            Abbrechen
+                                        </mui.Button>
+                                        <mui.Button variant='contained' color='error' onClick={_ => this.deleteFinal()}>
+                                            <mui.Icon>delete</mui.Icon>
+                                            Wech damit
+                                        </mui.Button>
+                                    </mui.ButtonGroup>
+                                </mui.Box>
+                            </mui.Popover>
 
-                        <mui.Snackbar
-                            open={this.state.notification !== ''}
-                            autoHideDuration={1000}
-                            onClose={_ => this.setState({ notification: '' })}
-                            message={this.state.notification} />
-                    </>
-                }
-            </div>
+                            <HelpPopover open={this.state.help} onClose={_ => this.setState({ help: false })} />
+
+                            <mui.Snackbar
+                                open={this.state.notification !== ''}
+                                autoHideDuration={1000}
+                                onClose={_ => this.setState({ notification: '' })}
+                                message={this.state.notification} />
+                        </>
+                    }
+                </div>
+            </>
         );
     }
 }

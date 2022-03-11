@@ -12,17 +12,6 @@ import NotFoundPage from './pages/notFound';
 import BoardPage from './pages/board';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 
-/*
-
-TODO:
-  - board buttons cancel item edit
-  - when adding new list, don't clear input during onValue update
-  - add edited item on + click/touch
-  - help page
-    - versioning
-
-*/
-
 const firebaseConfig = {
   apiKey: "AIzaSyBnyTbJHZLs2fNSkRWtFthZAV1faV_3Nas",
   authDomain: "wichtige-notizen.firebaseapp.com",

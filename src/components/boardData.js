@@ -105,7 +105,7 @@ class BoardData extends React.Component {
             if (this.state.menuList !== -1 && this.state.menuItem !== -1) {
                 const tempData = JSON.parse(JSON.stringify(this.props.data));
                 const item = tempData[this.state.menuList].splice(this.state.menuItem, 1)[0];
-                tempData.push([item]);
+                tempData.push([0, item]);
                 this.props.onDataChange(tempData);
             }
             this.setState({
@@ -118,24 +118,53 @@ class BoardData extends React.Component {
         else {
             this.props.onDataChange([
                 ...this.props.data,
-                [],
+                [0],
             ]);
         }
     }
 
     addItem(index) {
+        const shouldMove = this.state.itemMove && this.state.menuList !== -1 && this.state.menuItem !== -1;
         const tempData = JSON.parse(JSON.stringify(this.props.data));
-        tempData[index].push({ t: '' });
-        this.props.onDataChange(tempData);
-        this.setState({
-            editList: index,
-            editItem: tempData[index].length - 1,
-            menuList: -1,
-            menuItem: -1,
-            entryMenuAnchor: null,
-            editData: null,
-            justAdded: true,
-        });
+        const newIndex = tempData[index].length;
+        var newItem = { t: '' };
+        if (shouldMove) {
+            newItem = tempData[this.state.menuList].splice(this.state.menuItem, 1)[0];
+        }
+
+        if (!shouldMove && this.state.editList !== -1 && this.state.editItem !== -1) {
+            this.editSave(editedData => {
+                editedData[index].push(newItem);
+                this.props.onDataChange(editedData);
+            });
+        }
+        else {
+            tempData[index].push(newItem);
+            this.props.onDataChange(tempData);
+        }
+
+        if (shouldMove) {
+            this.setState({
+                editList: -1,
+                editItem: -1,
+                menuList: -1,
+                menuItem: -1,
+                entryMenuAnchor: null,
+                itemMove: false,
+                justAdded: false,
+            });
+        }
+        else {
+            this.setState({
+                editList: index,
+                editItem: newIndex,
+                menuList: -1,
+                menuItem: -1,
+                entryMenuAnchor: null,
+                editData: null,
+                justAdded: true,
+            });
+        }
     }
 
     editClear() {
@@ -156,10 +185,11 @@ class BoardData extends React.Component {
             if (this.state.menuList !== -1 && this.state.menuItem !== -1) {
                 const tempData = JSON.parse(JSON.stringify(this.props.data));
                 const item = tempData[this.state.menuList].splice(this.state.menuItem, 1)[0];
+                const offset = this.state.menuList === i && this.state.menuItem < i2 ? -1 : 0;
                 tempData[i] = [
-                    ...tempData[i].slice(0, i2),
+                    ...tempData[i].slice(0, i2 + offset),
                     item,
-                    ...tempData[i].slice(i2),
+                    ...tempData[i].slice(i2 + offset),
                 ];
                 this.props.onDataChange(tempData);
             }
@@ -210,7 +240,7 @@ class BoardData extends React.Component {
         });
     }
 
-    editSave() {
+    editSave(cb) {
         const isEmpty = (this.state.editData || { t: '' }).t.replace(/[ \t\r\n]/g, '') === '';
         if (this.state.editList !== -1 && this.state.editItem !== -1 && (this.state.editData === null ? this.state.justAdded : isEmpty)) {
             this.editDelete();
@@ -221,7 +251,12 @@ class BoardData extends React.Component {
                 ...this.state.editData,
                 t: this.state.editData.t.trim(),
             };
-            this.props.onDataChange(tempData);
+            if (cb) {
+                cb(tempData);
+            }
+            else {
+                this.props.onDataChange(tempData, false);
+            }
         }
     }
 
@@ -243,8 +278,6 @@ class BoardData extends React.Component {
 
     menuClose() {
         this.setState({
-            menuList: -1,
-            menuItem: -1,
             entryMenuAnchor: null,
         });
     }
@@ -299,11 +332,11 @@ class BoardData extends React.Component {
             var dataRow = '';
             for (var lists of this.props.data) {
                 if (lists[i]) {
-                    dataRow += `"${lists[i].t}",`;
+                    dataRow += `"${lists[i].t.replaceAll('"', '\\"').replaceAll('\n', '\\n')}",`;
                     allDone = false;
                 }
                 else {
-                    dataRow += ',';
+                    dataRow += '"",';
                 }
             }
             if (allDone) {
@@ -325,12 +358,34 @@ class BoardData extends React.Component {
             if (e.target.files[0]) {
                 const fr = new FileReader();
                 fr.onloadend = e2 => {
-                    for (var line of e2.target.result.replace('\r', '').split('\n')) {
+                    const importData = [];
+                    for (var line of e2.target.result.replaceAll('\r', '').split('\n')) {
+                        var open = false;
+                        var start = 0;
+                        const entries = [];
                         for (var i = 0; i < line.length; i++) {
+                            if (line[i] === '"' && (i === 0 || line[i - 1] !== '\\')) {
+                                open = !open;
+                                if (open) {
+                                    start = i + 1;
+                                }
+                                else {
+                                    entries.push(line.slice(start, i));
+                                }
+                            }
                         }
-                        //const entries = [...line.matchAll(/(?<=")[^,]*?(?=")/g)].map(m => m[0]);
-                        //console.log(entries); // TODO: CSV PARSER
+                        for (var i2 = 0; i2 < entries.length; i2++) {
+                            if (entries[i2]) {
+                                while (i2 >= importData.length) {
+                                    importData.push([0]);
+                                }
+                                importData[i2].push({
+                                    t: entries[i2].replaceAll('\\"', '"').replaceAll('\\n', '\n'),
+                                });
+                            }
+                        }
                     }
+                    this.props.onDataChange(importData);
                 };
                 fr.readAsText(e.target.files[0]);
             }
@@ -376,12 +431,17 @@ class BoardData extends React.Component {
                     {this.props.data.map((d, i) =>
                         <mui.List key={i}>
                             {d.map((e, i2) =>
-                                <BoardEntry key={i2} onClick={e => this.editItem(e, i, i2)} onContext={e => this.menuItem(e, i, i2)} onNext={_ => this.editNext()} onClear={_ => this.editClear()}
-                                    set={d => this.editSet(d)} save={_ => this.editSave()} edit={this.state.editList === i && this.state.editItem === i2} data={e} itemMove={this.state.itemMove}
-                                    thisMove={(this.state.entryMenuAnchor !== null || this.state.itemMove) && i === this.state.menuList && i2 === this.state.menuItem} />
+                                e === 0 ? <></> :
+                                    <BoardEntry key={i2} onClick={e => this.editItem(e, i, i2)} onContext={e => this.menuItem(e, i, i2)} onNext={_ => this.editNext()} onClear={_ => this.editClear()}
+                                        set={d => this.editSet(d)} save={_ => this.editSave()} edit={this.state.editList === i && this.state.editItem === i2} data={e} itemMove={this.state.itemMove}
+                                        thisMove={(this.state.entryMenuAnchor !== null || this.state.itemMove) && i === this.state.menuList && i2 === this.state.menuItem} />
                             )}
-                            <BoardEntry disabled={this.state.itemMove} onClick={_ => this.addItem(i)}>
-                                + Notiz
+                            <BoardEntry itemMove={this.state.itemMove} onClick={_ => this.addItem(i)}>
+                                {this.state.itemMove ?
+                                    'Ranhängen'
+                                    :
+                                    '+ Notiz'
+                                }
                             </BoardEntry>
                             <mui.ListItem>
                                 <mui.Box width='200px' display='flex'>
@@ -436,7 +496,7 @@ class BoardData extends React.Component {
                     ))}
                 </mui.SpeedDial>
                 <a ref={this.downloadRef} href={this.state.downloadSrc} download={this.state.downloadName} style={{ display: 'none' }}>csv</a>
-                <input ref={this.uploadRef} type='file' style={{ display: 'none' }} onChange={e => this.import(e)} />
+                <input ref={this.uploadRef} type='file' accept='.csv' style={{ display: 'none' }} onChange={e => this.import(e)} />
                 <mui.Popover open={this.state.deleteList > -1}>
                     <mui.Box padding='30px'>
                         <mui.Typography variant='h4'>
