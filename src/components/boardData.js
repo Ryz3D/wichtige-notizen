@@ -2,6 +2,8 @@ import React from 'react';
 import * as mui from '@mui/material';
 import { isMobile } from 'react-device-detect';
 import { Buffer } from 'buffer';
+import { v4 as uuidv4 } from 'uuid';
+import routerNavigate from './routerNavigate';
 
 class BoardEntry extends React.Component {
     constructor(props) {
@@ -99,10 +101,26 @@ class BoardData extends React.Component {
     }
 
     addList() {
-        this.props.onDataChange([
-            ...this.props.data,
-            [],
-        ]);
+        if (this.state.itemMove) {
+            if (this.state.menuList !== -1 && this.state.menuItem !== -1) {
+                const tempData = JSON.parse(JSON.stringify(this.props.data));
+                const item = tempData[this.state.menuList].splice(this.state.menuItem, 1)[0];
+                tempData.push([item]);
+                this.props.onDataChange(tempData);
+            }
+            this.setState({
+                menuList: -1,
+                menuItem: -1,
+                entryMenuAnchor: null,
+                itemMove: false,
+            });
+        }
+        else {
+            this.props.onDataChange([
+                ...this.props.data,
+                [],
+            ]);
+        }
     }
 
     addItem(index) {
@@ -318,7 +336,14 @@ class BoardData extends React.Component {
     }
 
     backup() {
-        // TODO: CLONE, SAVE (RENAME) AND OPEN
+        const newID = uuidv4();
+        localStorage.setItem(newID, JSON.stringify({
+            name: `${this.props.name} (Kopie)`,
+            data: this.props.data,
+        }));
+        const localBoards = JSON.parse(localStorage.getItem('localBoards'));
+        localStorage.setItem('localBoards', JSON.stringify([...localBoards, newID]));
+        this.props.navigate(`/board?id=${newID}`);
     }
 
     render() {
@@ -366,8 +391,12 @@ class BoardData extends React.Component {
                         </mui.List>
                     )}
                     <mui.List>
-                        <BoardEntry disabled={this.state.itemMove} onClick={_ => this.addList()}>
-                            + Liste
+                        <BoardEntry itemMove={this.state.itemMove} onClick={_ => this.addList()}>
+                            {this.state.itemMove ?
+                                'In neue Liste'
+                                :
+                                '+ Liste'
+                            }
                         </BoardEntry>
                     </mui.List>
                 </mui.Stack>
@@ -389,7 +418,7 @@ class BoardData extends React.Component {
                 }
                 <mui.SpeedDial
                     ariaLabel=''
-                    style={{ position: 'fixed', bottom: '40px', right: '40px' }}
+                    style={{ position: 'fixed', bottom: '30px', right: '30px' }}
                     icon={<mui.SpeedDialIcon icon={<mui.Icon>more_vert</mui.Icon>} openIcon={<mui.Icon>close</mui.Icon>} />}>
                     {[
                         ['CSV-Export', 'download', _ => this.export()],
@@ -428,4 +457,4 @@ class BoardData extends React.Component {
     }
 }
 
-export default BoardData;
+export default routerNavigate(BoardData);

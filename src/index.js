@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import reportWebVitals from './reportWebVitals';
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
 import { initializeApp } from 'firebase/app';
 
@@ -14,8 +15,6 @@ import { CSSTransition, TransitionGroup } from 'react-transition-group';
 /*
 
 TODO:
-  - move into new list
-  - icon
   - board buttons cancel item edit
   - when adding new list, don't clear input during onValue update
   - add edited item on + click/touch
@@ -72,6 +71,8 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById('root')
 );
+
+serviceWorkerRegistration.register();
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))

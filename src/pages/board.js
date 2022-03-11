@@ -203,20 +203,24 @@ class BoardPage extends React.Component {
                             </mui.Icon>
                         </mui.Tooltip>
                         <mui.Tooltip title='Board teilen'>
-                            <mui.IconButton disabled={this.state.id === ''}
-                                style={{ color: this.state.id === '' ? '' : 'white', marginLeft: '5px' }} size='large' onClick={_ => this.share()}>
-                                <mui.Icon>
-                                    share
-                                </mui.Icon>
-                            </mui.IconButton>
+                            <span>
+                                <mui.IconButton disabled={this.state.id === ''}
+                                    style={{ color: this.state.id === '' ? '' : 'white', marginLeft: '5px' }} size='large' onClick={_ => this.share()}>
+                                    <mui.Icon>
+                                        share
+                                    </mui.Icon>
+                                </mui.IconButton>
+                            </span>
                         </mui.Tooltip>
                         <mui.Tooltip title='Rückgängig'>
-                            <mui.IconButton disabled={this.state.lastData.length === 0}
-                                style={{ color: this.state.lastData.length === 0 ? '' : 'white', marginLeft: '5px' }} size='large' onClick={_ => this.undo()}>
-                                <mui.Icon>
-                                    undo
-                                </mui.Icon>
-                            </mui.IconButton>
+                            <span>
+                                <mui.IconButton disabled={this.state.lastData.length === 0}
+                                    style={{ color: this.state.lastData.length === 0 ? '' : 'white', marginLeft: '5px' }} size='large' onClick={_ => this.undo()}>
+                                    <mui.Icon>
+                                        undo
+                                    </mui.Icon>
+                                </mui.IconButton>
+                            </span>
                         </mui.Tooltip>
                     </mui.Toolbar>
                     <mui.TextField fullWidth variant='outlined' label='Name' className='invertedField'

@@ -174,13 +174,11 @@ class HomePage extends React.Component {
                                     </mui.ListItem>
                                 )}
                                 <mui.ListItem>
-                                    <mui.Tooltip title='Neues Board'>
-                                        <LinkButton size='large' fullWidth variant='outlined' url={`/board`}>
-                                            <mui.Typography variant='h5'>
-                                                +
-                                            </mui.Typography>
-                                        </LinkButton>
-                                    </mui.Tooltip>
+                                    <LinkButton tooltip='Neues Board' size='large' fullWidth variant='outlined' url={`/board`}>
+                                        <mui.Typography variant='h5'>
+                                            +
+                                        </mui.Typography>
+                                    </LinkButton>
                                 </mui.ListItem>
                             </mui.List>
                         </div>
@@ -211,14 +209,11 @@ class HomePage extends React.Component {
                                     Board löschen?
                                 </mui.Typography>
                                 <br />
-                                {this.state.deleteShared !== '' ?
-                                    <>
-                                        <b>"{this.state.deleteName}"</b> ist ein öffentliches Board, du kannst über den Link wieder darauf zugreifen
-                                    </>
-                                    :
-                                    <>
-                                        <b>"{this.state.deleteName}"</b> ist ein lokales Board, es wird für immer vernichtet
-                                    </>
+                                {this.state.deleteShared !== '' &&
+                                    <><b>"{this.state.deleteName}"</b> ist ein öffentliches Board, du kannst über den Link wieder darauf zugreifen.</>
+                                }
+                                {this.state.deleteLocal &&
+                                    <><b>"{this.state.deleteName}"</b> ist ein lokales Board, es wird für immer vernichtet.</>
                                 }
                                 <br />
                                 <br />
