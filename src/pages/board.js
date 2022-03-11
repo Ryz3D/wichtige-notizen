@@ -172,6 +172,12 @@ class BoardPage extends React.Component {
         });
     }
 
+    copyLink() {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(`https://wichtige-notizen.web.app/board?id=${this.state.id}`);
+        }
+    }
+
     render() {
         const rootStyle = {
             backgroundColor: '#fff',
@@ -237,7 +243,7 @@ class BoardPage extends React.Component {
                         </mui.Typography>
                         <br />
                         Teile diesen Link (klicken zum kopieren):
-                        <mui.Link marginLeft='5px' style={{ cursor: 'pointer' }} onClick={_ => navigator.clipboard.writeText(`https://wichtige-notizen.web.app/board?id=${this.state.id}`)}>
+                        <mui.Link marginLeft='5px' style={{ cursor: 'pointer' }} onClick={_ => this.copyLink()}>
                             {`https://wichtige-notizen.web.app/board?id=${this.state.id}`}
                         </mui.Link>
                         <br />

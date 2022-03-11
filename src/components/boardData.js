@@ -326,8 +326,10 @@ class BoardData extends React.Component {
                 const fr = new FileReader();
                 fr.onloadend = e2 => {
                     for (var line of e2.target.result.replace('\r', '').split('\n')) {
-                        const entries = [...line.matchAll(/(?<=")[^,]*?(?=")/g)].map(m => m[0]);
-                        console.log(entries); // TODO: CSV PARSER
+                        for (var i = 0; i < line.length; i++) {
+                        }
+                        //const entries = [...line.matchAll(/(?<=")[^,]*?(?=")/g)].map(m => m[0]);
+                        //console.log(entries); // TODO: CSV PARSER
                     }
                 };
                 fr.readAsText(e.target.files[0]);
@@ -402,7 +404,7 @@ class BoardData extends React.Component {
                 </mui.Stack>
                 {isMobile ?
                     <>
-                        <div style={{ height: '70px' }} />
+                        <div style={{ height: '70px' }}></div>
                         <mui.Popper disableEnforceFocus={true} disableScrollLock={true} disableAutoFocus={true}
                             open={this.state.entryMenuAnchor !== null} anchorEl={this.state.entryMenuAnchor}>
                             <mui.MenuList style={{ background: 'white', border: '#eee solid 3px', borderRadius: '5px' }}>

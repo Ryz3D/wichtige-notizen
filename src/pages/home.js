@@ -105,17 +105,19 @@ class HomePage extends React.Component {
     }
 
     clipboardPaste() {
-        navigator.clipboard.readText()
-            .then(text => {
-                const clipboardID = text.match(/(?<=\/board\?id=)\w+/g);
-                if (clipboardID !== null) {
-                    this.props.navigate(`/board?id=${clipboardID}`);
-                }
-                else {
-                    this.setState({ notification: 'Kein Board-Link kopiert' });
-                }
-            })
-            .catch(_ => this.setState({ notification: 'Kein Zugriff auf Zwischenablage' }));
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.readText()
+                .then(text => {
+                    const clipboardLink = (text || '').match(/\/board\?id=\w+/g);
+                    if (clipboardLink) {
+                        this.props.navigate(clipboardLink[0]);
+                    }
+                    else {
+                        this.setState({ notification: 'Kein Board-Link kopiert' });
+                    }
+                })
+                .catch(_ => this.setState({ notification: 'Kein Zugriff auf Zwischenablage' }));
+        }
     }
 
     render() {
