@@ -185,7 +185,7 @@ class BoardData extends React.Component {
             if (this.state.menuList !== -1 && this.state.menuItem !== -1) {
                 const tempData = JSON.parse(JSON.stringify(this.props.data));
                 const item = tempData[this.state.menuList].splice(this.state.menuItem, 1)[0];
-                const offset = this.state.menuList === i && this.state.menuItem < i2 ? -1 : 0;
+                const offset = this.state.menuList === i && this.state.menuItem < i2 && this.state.menuItem !== i2 - 1 ? -1 : 0;
                 tempData[i] = [
                     ...tempData[i].slice(0, i2 + offset),
                     item,
