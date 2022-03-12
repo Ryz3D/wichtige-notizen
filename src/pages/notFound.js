@@ -1,5 +1,6 @@
 import React from 'react';
 import * as mui from '@mui/material';
+import Helmet from 'react-helmet';
 
 class NotFoundPage extends React.Component {
     render() {
@@ -16,8 +17,13 @@ class NotFoundPage extends React.Component {
 
         return (
             <div style={rootStyle}>
-                <mui.Typography variant='h1' marginTop='30vh'>
-                    404
+                <Helmet>
+                    <title>
+                        Notizen?
+                    </title>
+                </Helmet>
+                <mui.Typography style={{marginTop: '40vh'}} variant='h1'>
+                    404!
                 </mui.Typography>
             </div>
         );

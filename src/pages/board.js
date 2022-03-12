@@ -9,6 +9,7 @@ import QRCode from "react-qr-code";
 import { Buffer } from 'buffer';
 import { v4 as uuidv4 } from 'uuid';
 import Hotkeys from 'react-hot-keys';
+import Helmet from 'react-helmet';
 
 class BoardPage extends React.Component {
     constructor(props) {
@@ -203,6 +204,11 @@ class BoardPage extends React.Component {
                     onKeyDown={_ => this.share()}
                 />
                 <div style={rootStyle}>
+                    <Helmet>
+                        <title>
+                            {this.state.name || 'Notizen'}
+                        </title>
+                    </Helmet>
                     <mui.AppBar position='static'>
                         <mui.Toolbar>
                             <mui.Tooltip title='Alle Boards'>

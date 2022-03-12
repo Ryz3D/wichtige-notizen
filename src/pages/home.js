@@ -5,6 +5,7 @@ import LinkButton from '../components/linkButton';
 import HelpPopover from '../components/helpPopover';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import Hotkeys from 'react-hot-keys';
+import Helmet from 'react-helmet';
 
 class HomePage extends React.Component {
     constructor(props) {
@@ -143,6 +144,11 @@ class HomePage extends React.Component {
                     onKeyDown={_ => this.clipboardPaste()}
                 />
                 <div style={rootStyle}>
+                    <Helmet>
+                        <title>
+                            Notizen
+                        </title>
+                    </Helmet>
                     <mui.AppBar position='static'>
                         <mui.Toolbar>
                             <mui.Typography variant='h2' marginY='10px'>
