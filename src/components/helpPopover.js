@@ -30,7 +30,9 @@ class HelpPopover extends React.Component {
                         <mui.AccordionDetails>
                             <mui.Typography>
                                 - Versionen eingeführt
+                                <br />
                                 - Menü schließen bei Shift+Enter
+                                <br />
                                 - Seiten-Titel
                             </mui.Typography>
                         </mui.AccordionDetails>
