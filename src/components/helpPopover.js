@@ -24,12 +24,14 @@ class HelpPopover extends React.Component {
                     <mui.Accordion expanded={this.state.accordion1} onChange={_ => this.setState({ accordion1: !this.state.accordion1 })}>
                         <mui.AccordionSummary expandIcon={<mui.Icon>expand_more</mui.Icon>}>
                             <mui.Typography>
-                                Version 1.2.2
+                                Version 1.2.3
                             </mui.Typography>
                         </mui.AccordionSummary>
                         <mui.AccordionDetails>
                             <mui.Typography>
+                                - Versionen eingeführt
                                 - Menü schließen bei Shift+Enter
+                                - Seiten-Titel
                             </mui.Typography>
                         </mui.AccordionDetails>
                     </mui.Accordion>
