@@ -331,7 +331,7 @@ class BoardData extends React.Component {
             var dataRow = '';
             for (var lists of this.props.data) {
                 if (lists[i]) {
-                    dataRow += `"${lists[i].t.replaceAll('"', '\\"').replaceAll('\n', '\\n')}",`;
+                    dataRow += `${lists[i].h ? '*' : ''}"${lists[i].t.replaceAll('"', '\\"').replaceAll('\n', '\\n')}",`;
                     allDone = false;
                 }
                 else {
@@ -361,26 +361,32 @@ class BoardData extends React.Component {
                     for (var line of e2.target.result.replaceAll('\r', '').split('\n')) {
                         var open = false;
                         var start = 0;
+                        var h = false;
                         const entries = [];
                         for (var i = 0; i < line.length; i++) {
                             if (line[i] === '"' && (i === 0 || line[i - 1] !== '\\')) {
                                 open = !open;
                                 if (open) {
+                                    h = false;
+                                    if (i !== 0) {
+                                        h = line[i - 1] === '*';
+                                    }
                                     start = i + 1;
                                 }
                                 else {
-                                    entries.push(line.slice(start, i));
+                                    entries.push({
+                                        t: line.slice(start, i).replaceAll('\\"', '"').replaceAll('\\n', '\n'),
+                                        h,
+                                    });
                                 }
                             }
                         }
                         for (var i2 = 0; i2 < entries.length; i2++) {
-                            if (entries[i2]) {
+                            if (entries[i2].t) {
                                 while (i2 >= importData.length) {
                                     importData.push([0]);
                                 }
-                                importData[i2].push({
-                                    t: entries[i2].replaceAll('\\"', '"').replaceAll('\\n', '\n'),
-                                });
+                                importData[i2].push(entries[i2]);
                             }
                         }
                     }
