@@ -7,6 +7,7 @@ class HelpPopover extends React.Component {
         this.state = {
             accordion1: false,
             accordion2: false,
+            accordion3: false,
         };
     }
 
@@ -28,7 +29,7 @@ class HelpPopover extends React.Component {
                         </mui.AccordionSummary>
                         <mui.AccordionDetails>
                             <mui.Typography>
-                                - Menü schließen bei Strg+Enter
+                                - Menü schließen bei Shift+Enter
                             </mui.Typography>
                         </mui.AccordionDetails>
                     </mui.Accordion>
