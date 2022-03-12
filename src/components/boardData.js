@@ -177,6 +177,7 @@ class BoardData extends React.Component {
             editList: -1,
             editItem: -1,
             editData: null,
+            entryMenuAnchor: null,
         });
     }
 
@@ -228,6 +229,7 @@ class BoardData extends React.Component {
                 editItem: this.state.editItem + 1,
                 editData: null,
                 justAdded: false,
+                entryMenuAnchor: null,
             });
         } else {
             this.editClear();
@@ -270,9 +272,6 @@ class BoardData extends React.Component {
         if (!e.target.type) {
             this.editSave();
             this.editClear();
-            if (isMobile) {
-                this.menuClose();
-            }
         }
     }
 
