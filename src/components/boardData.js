@@ -325,25 +325,23 @@ class BoardData extends React.Component {
     }
 
     export() {
+        console.log(this.props.data);
         var data = '';
-        for (var i = 0; ; i++) {
+        for (var i = 1; ; i++) {
             var allDone = true;
             var dataRow = '';
             for (var lists of this.props.data) {
-                if (lists[i]) {
-                    dataRow += `${lists[i].h ? '*' : ''}"${lists[i].t.replaceAll('"', '\\"').replaceAll('\n', '\\n')}",`;
+                if (lists[i] !== undefined) {
                     allDone = false;
+                    dataRow += `${lists[i].h ? '*' : ''}"${lists[i].t.replaceAll('"', '\\"').replaceAll('\n', '\\n')}",`;
                 }
-                else {
+                else
                     dataRow += '"",';
-                }
             }
-            if (allDone) {
+            if (allDone)
                 break;
-            }
-            else {
+            else
                 data += dataRow.slice(0, -1) + '\n';
-            }
         }
         const based = Buffer.from(data).toString('base64');
         this.setState({

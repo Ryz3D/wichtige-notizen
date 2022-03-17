@@ -75,12 +75,7 @@ class BoardPage extends React.Component {
                                     data: Object.values(v.val().data || {}),
                                     loading: false,
                                     online: true,
-                                }, _ => {
-                                    const sharedBoards = JSON.parse(localStorage.getItem('sharedBoards'));
-                                    if (sharedBoards.findIndex(p => p === this.state.id) === -1) {
-                                        this.addAsShared();
-                                    }
-                                });
+                                }, _ => this.addAsShared());
                             }
                         });
                     } else {
