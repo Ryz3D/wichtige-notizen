@@ -1,5 +1,8 @@
 import React from 'react';
 import * as mui from '@mui/material';
+import {
+    ExpandMore as ExpandMoreIcon,
+} from '@mui/icons-material';
 
 class HelpPopover extends React.Component {
     constructor(props) {
@@ -22,25 +25,31 @@ class HelpPopover extends React.Component {
                     </mui.Typography>
                     <br />
                     <mui.Accordion expanded={this.state.accordion1} onChange={_ => this.setState({ accordion1: !this.state.accordion1 })}>
-                        <mui.AccordionSummary expandIcon={<mui.Icon>expand_more</mui.Icon>}>
+                        <mui.AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <mui.Typography>
-                                Version 1.2.4
+                                Version 1.3.0
                             </mui.Typography>
                         </mui.AccordionSummary>
                         <mui.AccordionDetails>
                             <mui.Typography>
-                                - Versionen eingeführt
+                                - Dark mode
                                 <br />
-                                - Menü schließen bei Shift+Enter
+                                - Zeilenumbruch auch bei Links
                                 <br />
-                                - Seiten-Titel
+                                - "Öffnen als Link" im Menü
                                 <br />
-                                - CSV-Export repariert
+                                - "Kopieren" im Menü (noch nur Text)
+                                <br />
+                                - Icons funktionieren Offline
+                                <br />
+                                - Keine Übergänge mehr auf IOS
+                                <br />
+                                - Menü und Popups funktionieren besser
                             </mui.Typography>
                         </mui.AccordionDetails>
                     </mui.Accordion>
                     <mui.Accordion expanded={this.state.accordion2} onChange={_ => this.setState({ accordion2: !this.state.accordion2 })}>
-                        <mui.AccordionSummary expandIcon={<mui.Icon>expand_more</mui.Icon>}>
+                        <mui.AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <mui.Typography>
                                 Umgang mit Daten
                             </mui.Typography>
@@ -59,7 +68,7 @@ class HelpPopover extends React.Component {
                         </mui.AccordionDetails>
                     </mui.Accordion>
                     <mui.Accordion expanded={this.state.accordion3} onChange={_ => this.setState({ accordion3: !this.state.accordion3 })}>
-                        <mui.AccordionSummary expandIcon={<mui.Icon>expand_more</mui.Icon>}>
+                        <mui.AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <mui.Typography>
                                 Bedienung
                             </mui.Typography>
@@ -68,15 +77,15 @@ class HelpPopover extends React.Component {
                             <mui.Typography>
                                 <mui.Table>
                                     {[
-                                        [<b>Tastatur Shortcuts</b>],
+                                        [<mui.Typography variant='h6'>Tastatur Shortcuts</mui.Typography>, <></>],
                                         [<>Enter (Bei Namen-Eingabe)</>, <>Board speichern</>],
                                         [<>Shift+Enter</>, <>Nächste Eingabe</>],
                                         [<>Escape</>, <>Eingabe abbrechen</>],
                                         [<>Strg+Z</>, <>Rückgängig</>],
                                         [<>Strg+V</>, <>Kopierten Link öffnen</>],
                                         [<>Strg+Y</>, <>Board teilen</>],
-                                    ].map(e =>
-                                        <mui.TableRow>
+                                    ].map((e, i) =>
+                                        <mui.TableRow hover={i !== 0}>
                                             {e.map(e2 =>
                                                 <mui.TableCell>
                                                     {e2}

@@ -1,17 +1,17 @@
 import React from 'react';
 import * as mui from '@mui/material';
 import Helmet from 'react-helmet';
+import muiTheme from '../wrapper/muiTheme';
 
 class NotFoundPage extends React.Component {
     render() {
         const rootStyle = {
-            backgroundColor: '#000',
+            backgroundColor: this.props.theme.palette.background.default,
             position: 'fixed',
             top: '0',
             left: '0',
             minWidth: '100vw',
             minHeight: '100vh',
-            color: '#fff',
             textAlign: 'center',
         };
 
@@ -30,4 +30,4 @@ class NotFoundPage extends React.Component {
     }
 }
 
-export default NotFoundPage;
+export default muiTheme(NotFoundPage);

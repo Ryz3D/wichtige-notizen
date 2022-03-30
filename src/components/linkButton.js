@@ -1,6 +1,6 @@
 import React from 'react';
 import * as mui from '@mui/material';
-import routerNavigate from './routerNavigate';
+import routerNavigate from '../wrapper/routerNavigate';
 
 class LinkButton extends React.Component {
     render() {

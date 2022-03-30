@@ -3,7 +3,19 @@ import * as mui from '@mui/material';
 import { isMobile } from 'react-device-detect';
 import { Buffer } from 'buffer';
 import { v4 as uuidv4 } from 'uuid';
-import routerNavigate from './routerNavigate';
+import routerNavigate from '../wrapper/routerNavigate';
+import {
+    AttachFile as AttachFileIcon,
+    BackupTable as BackupTableIcon,
+    BorderColor as BorderColorIcon,
+    Close as CloseIcon,
+    ContentPaste as ContentPasteIcon,
+    ControlCamera as ControlCameraIcon,
+    Delete as DeleteIcon,
+    Download as DownloadIcon,
+    MoreVert as MoreVertIcon,
+    OpenInBrowser as OpenInBrowserIcon,
+} from '@mui/icons-material';
 
 class BoardEntry extends React.Component {
     constructor(props) {
@@ -58,10 +70,11 @@ class BoardEntry extends React.Component {
         const btnStyle = {
             textAlign: 'left',
             textTransform: 'none',
+            lineBreak: 'anywhere',
         };
 
         return (
-            <mui.ListItem>
+            <mui.ListItem disablePadding style={{ margin: '16px 8px' }}>
                 <mui.Box width='200px'>
                     {this.props.edit ?
                         <mui.TextField autoFocus multiline onKeyDown={e => this.onKey(e)} variant={(this.props.data || {}).h ? 'filled' : 'outlined'}
@@ -269,9 +282,15 @@ class BoardData extends React.Component {
     }
 
     rootClick(e) {
-        if (!e.target.type) {
+        if (['LI', 'UL', 'DIV'].find(p => p === e.target.tagName) && !e.target.className.match(/\WnotRoot\W/g)) {
             this.editSave();
             this.editClear();
+            this.setState({
+                menuList: -1,
+                menuItem: -1,
+                entryMenuAnchor: null,
+                itemMove: false,
+            });
         }
     }
 
@@ -283,10 +302,12 @@ class BoardData extends React.Component {
 
     menuItem(e, i, i2) {
         e.preventDefault();
+        this.editClear();
+        const isInput = e.currentTarget.className.match(/\WMuiTextField-root\W/g);
         this.setState({
             menuList: i,
             menuItem: i2,
-            entryMenuAnchor: e.currentTarget,
+            entryMenuAnchor: isInput ? e.currentTarget.parentNode : e.currentTarget,
         });
         return false;
     }
@@ -313,6 +334,18 @@ class BoardData extends React.Component {
             itemMove: true,
             entryMenuAnchor: null,
         });
+    }
+
+    menuClip() {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(this.props.data[this.state.menuList][this.state.menuItem].t);
+        }
+        this.menuClose();
+    }
+
+    menuOpen() {
+        window.open(this.props.data[this.state.menuList][this.state.menuItem].t, '_blank').focus();
+        this.menuClose();
     }
 
     deleteList() {
@@ -416,13 +449,15 @@ class BoardData extends React.Component {
         };
 
         const itemMenu = [
-            ['delete', 'Löschen', _ => this.menuDelete()],
-            ['border_color', 'Markieren', _ => this.menuHighlight()],
-            ['control_camera', 'Verschieben', _ => this.menuMove()],
+            [<DeleteIcon />, 'Löschen', _ => this.menuDelete()],
+            [<BorderColorIcon />, 'Markieren', _ => this.menuHighlight()],
+            [<ControlCameraIcon />, 'Verschieben', _ => this.menuMove()],
+            [<ContentPasteIcon />, 'Kopieren', _ => this.menuClip()],
+            [<OpenInBrowserIcon />, 'Als Link öffnen', _ => this.menuOpen()],
         ].map((e, i) =>
-            <mui.MenuItem key={i} onClick={e[2]}>
+            <mui.MenuItem className='notRoot' key={i} onClick={e[2]}>
                 <mui.ListItemIcon>
-                    <mui.Icon>{e[0]}</mui.Icon>
+                    {e[0]}
                 </mui.ListItemIcon>
                 {e[1]}
             </mui.MenuItem>
@@ -449,7 +484,7 @@ class BoardData extends React.Component {
                             <mui.ListItem>
                                 <mui.Box width='200px' display='flex'>
                                     <mui.IconButton style={{ margin: 'auto' }} onClick={_ => this.setState({ deleteList: i })}>
-                                        <mui.Icon>delete</mui.Icon>
+                                        <DeleteIcon />
                                     </mui.IconButton>
                                 </mui.Box>
                             </mui.ListItem>
@@ -484,23 +519,25 @@ class BoardData extends React.Component {
                 <mui.SpeedDial
                     ariaLabel=''
                     style={{ position: 'fixed', bottom: '30px', right: '30px' }}
-                    icon={<mui.SpeedDialIcon icon={<mui.Icon>more_vert</mui.Icon>} openIcon={<mui.Icon>close</mui.Icon>} />}>
+                    icon={<mui.SpeedDialIcon icon={<MoreVertIcon />} openIcon={<CloseIcon />} />}>
                     {[
-                        ['CSV-Export', 'download', _ => this.export()],
-                        ['CSV-Import', 'attach_file', _ => this.uploadRef.current.click()],
-                        ['Lokale Kopie', 'backup_table', _ => this.backup()],
+                        ['CSV-Export', <DownloadIcon />, _ => this.export()],
+                        ['CSV-Import', <AttachFileIcon />, _ => this.uploadRef.current.click()],
+                        ['Lokale Kopie', <BackupTableIcon />, _ => this.backup()],
                     ].map((e, i) => (
                         <mui.SpeedDialAction
                             key={i}
                             tooltipTitle={e[0]}
-                            icon={<mui.Icon>{e[1]}</mui.Icon>}
+                            icon={e[1]}
                             onClick={e[2]}
                         />
                     ))}
                 </mui.SpeedDial>
                 <a ref={this.downloadRef} href={this.state.downloadSrc} download={this.state.downloadName} style={{ display: 'none' }}>csv</a>
                 <input ref={this.uploadRef} type='file' accept='.csv' style={{ display: 'none' }} onChange={e => this.import(e)} />
-                <mui.Popover open={this.state.deleteList > -1}>
+                <mui.Popover open={this.state.deleteList > -1} BackdropProps onClose={_ => this.setState({ deleteList: -1 })}
+                    anchorOrigin={{ horizontal: 'center', vertical: 'top' }}
+                    transformOrigin={{ horizontal: 'center', vertical: 'top' }}>
                     <mui.Box padding='30px'>
                         <mui.Typography variant='h4'>
                             Liste löschen?
@@ -511,7 +548,7 @@ class BoardData extends React.Component {
                                 Abbrechen
                             </mui.Button>
                             <mui.Button variant='contained' color='error' onClick={_ => this.deleteList()}>
-                                <mui.Icon>delete</mui.Icon>
+                                <DeleteIcon />
                                 Wech damit
                             </mui.Button>
                         </mui.ButtonGroup>

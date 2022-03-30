@@ -2,14 +2,22 @@ import React from 'react';
 import * as mui from '@mui/material';
 import { Link } from 'react-router-dom';
 import BoardData from '../components/boardData';
-import routerNavigate from '../components/routerNavigate';
-import './board.css';
+import routerNavigate from '../wrapper/routerNavigate';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
 import QRCode from "react-qr-code";
 import { Buffer } from 'buffer';
 import { v4 as uuidv4 } from 'uuid';
 import Hotkeys from 'react-hot-keys';
 import Helmet from 'react-helmet';
+import muiTheme from '../wrapper/muiTheme';
+import {
+    ArrowBackRounded as ArrowBackRoundedIcon,
+    Circle as CircleIcon,
+    Close as CloseIcon,
+    OfflineBolt as OfflineBoltIcon,
+    Share as ShareIcon,
+    Undo as UndoIcon,
+} from '@mui/icons-material';
 
 class BoardPage extends React.Component {
     constructor(props) {
@@ -29,6 +37,11 @@ class BoardPage extends React.Component {
             lastData: [],
         };
         this.qrRef = React.createRef();
+        this.darkTheme = mui.createTheme({
+            palette: {
+                mode: 'dark',
+            },
+        });
     }
 
     componentDidMount() {
@@ -179,7 +192,7 @@ class BoardPage extends React.Component {
 
     render() {
         const rootStyle = {
-            backgroundColor: '#fff',
+            backgroundColor: this.props.theme.palette.background.default,
             position: 'fixed',
             top: '0',
             left: '0',
@@ -206,48 +219,65 @@ class BoardPage extends React.Component {
                     </Helmet>
                     <mui.AppBar position='static'>
                         <mui.Toolbar>
-                            <mui.Tooltip title='Alle Boards'>
-                                <mui.IconButton style={{ color: 'white', marginRight: '5px' }} size='large' component={Link} to='/'>
-                                    <mui.Icon>
-                                        arrow_back_rounded
-                                    </mui.Icon>
-                                </mui.IconButton>
-                            </mui.Tooltip>
-                            <mui.Typography variant='h2' marginY='10px'>
-                                Board
-                            </mui.Typography>
-                            <mui.Tooltip title={this.state.online ? 'Online' : 'Offline'}>
-                                <mui.Icon fontSize='large' color={this.state.online ? '' : 'disabled'}
-                                    style={{ color: this.state.online ? '#0c0' : '', marginLeft: '10px' }}>
-                                    {this.state.online ? 'circle' : 'offline_bolt'}
-                                </mui.Icon>
-                            </mui.Tooltip>
-                            <mui.Tooltip title='Board teilen'>
-                                <span>
-                                    <mui.IconButton disabled={this.state.id === ''}
-                                        style={{ color: this.state.id === '' ? '' : 'white', marginLeft: '5px' }} size='large' onClick={_ => this.share()}>
-                                        <mui.Icon>
-                                            share
-                                        </mui.Icon>
+                            <div style={{ display: 'flex', flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                                <mui.Tooltip title='Alle Boards'>
+                                    <mui.IconButton style={{ color: 'white', marginRight: '5px' }} size='large' component={Link} to='/'>
+                                        <ArrowBackRoundedIcon />
                                     </mui.IconButton>
-                                </span>
-                            </mui.Tooltip>
-                            <mui.Tooltip title='Rückgängig'>
-                                <span>
-                                    <mui.IconButton disabled={this.state.lastData.length === 0}
-                                        style={{ color: this.state.lastData.length === 0 ? '' : 'white', marginLeft: '5px' }} size='large' onClick={_ => this.undo()}>
-                                        <mui.Icon>
-                                            undo
-                                        </mui.Icon>
-                                    </mui.IconButton>
-                                </span>
-                            </mui.Tooltip>
+                                </mui.Tooltip>
+                                <mui.Typography variant='h2' marginY='10px'>
+                                    Board
+                                </mui.Typography>
+                                <div style={{ display: 'flex' }}>
+                                    <div style={{ alignSelf: 'flex-end' }}>
+                                        <mui.Tooltip title={this.state.online ? 'Online' : 'Offline'}>
+                                            {React.createElement(this.state.online ? CircleIcon : OfflineBoltIcon, {
+                                                fontSize: 'large',
+                                                color: this.state.online ? '' : 'disabled',
+                                                style: {
+                                                    color: this.state.online ? '#0c0' : '',
+                                                    marginLeft: '10px',
+                                                },
+                                            })}
+                                        </mui.Tooltip>
+                                    </div>
+                                    <div>
+                                        <mui.Tooltip title='Board teilen'>
+                                            <span>
+                                                <mui.IconButton disabled={this.state.id === ''}
+                                                    style={{ color: this.state.id === '' ? '' : 'white', marginLeft: '5px' }} size='large' onClick={_ => this.share()}>
+                                                    <ShareIcon />
+                                                </mui.IconButton>
+                                            </span>
+                                        </mui.Tooltip>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <mui.Tooltip title='Rückgängig'>
+                                    <span>
+                                        <mui.IconButton disabled={this.state.lastData.length === 0}
+                                            style={{ color: this.state.lastData.length === 0 ? '' : 'white', marginLeft: '5px' }} size='large' onClick={_ => this.undo()}>
+                                            <UndoIcon />
+                                        </mui.IconButton>
+                                    </span>
+                                </mui.Tooltip>
+                            </div>
                         </mui.Toolbar>
-                        <mui.TextField fullWidth variant='outlined' label='Name' className='invertedField'
-                            value={this.state.name} onChange={e => this.onNameChange(e)} onKeyDown={e => this.onNameKey(e)} />
+                        <mui.ThemeProvider theme={this.darkTheme}>
+                            <mui.CssBaseline />
+                            <mui.TextField fullWidth variant='outlined' label='Name' disabled={this.state.loading}
+                                value={this.state.name} onChange={e => this.onNameChange(e)} onKeyDown={e => this.onNameKey(e)} />
+                        </mui.ThemeProvider>
                     </mui.AppBar>
 
-                    <BoardData name={this.state.name} data={this.state.data} onDataChange={data => this.onDataChange(data)} />
+                    {this.state.loading ?
+                        <mui.Box flex display='flex' justifyContent='center' marginTop='1vh'>
+                            <mui.CircularProgress thickness={1} size={100} />
+                        </mui.Box>
+                        :
+                        <BoardData name={this.state.name} data={this.state.data} onDataChange={data => this.onDataChange(data)} />
+                    }
 
                     <mui.Popover open={this.state.shareOpen} onClose={_ => this.setState({ shareOpen: false })} BackdropProps
                         anchorOrigin={{ horizontal: 'center', vertical: 'top' }}
@@ -264,7 +294,7 @@ class BoardPage extends React.Component {
                             <br />
                             <img src={this.state.qrSrc} alt='qr' style={{ display: 'block', margin: '20px auto' }} />
                             <mui.Button fullWidth variant='outlined' onClick={_ => this.setState({ shareOpen: false })}
-                                startIcon={<mui.Icon>close</mui.Icon>}>
+                                startIcon={<CloseIcon />}>
                                 Schließen
                             </mui.Button>
                         </mui.Box>
@@ -285,7 +315,7 @@ class BoardPage extends React.Component {
                             <br />
                             <mui.Box marginTop='20px'>
                                 <mui.Button variant='outlined' component={Link} to='/'
-                                    startIcon={<mui.Icon>arrow_back_rounded</mui.Icon>}>
+                                    startIcon={<ArrowBackRoundedIcon />}>
                                     Zurück
                                 </mui.Button>
                             </mui.Box>
@@ -303,4 +333,4 @@ class BoardPage extends React.Component {
     }
 }
 
-export default routerNavigate(BoardPage);
+export default routerNavigate(muiTheme(BoardPage));
