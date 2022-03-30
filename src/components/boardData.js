@@ -4,6 +4,7 @@ import { isMobile } from 'react-device-detect';
 import { Buffer } from 'buffer';
 import { v4 as uuidv4 } from 'uuid';
 import routerNavigate from '../wrapper/routerNavigate';
+import muiTheme from '../wrapper/muiTheme';
 import {
     AttachFile as AttachFileIcon,
     BackupTable as BackupTableIcon,
@@ -448,6 +449,14 @@ class BoardData extends React.Component {
             overflow: 'auto',
         };
 
+        console.log(this.props.theme.palette)
+        const mobileMenuStyle = {
+            background: this.props.theme.palette.background.default,
+            border: this.props.theme.palette.action.disabledBackground + ' solid 2px',
+            borderRadius: '3px',
+            color: this.props.theme.palette.text.primary,
+        };
+
         const itemMenu = [
             [<DeleteIcon />, 'Löschen', _ => this.menuDelete()],
             [<BorderColorIcon />, 'Markieren', _ => this.menuHighlight()],
@@ -505,7 +514,7 @@ class BoardData extends React.Component {
                         <div style={{ height: '70px' }}></div>
                         <mui.Popper disableEnforceFocus={true} disableScrollLock={true} disableAutoFocus={true}
                             open={this.state.entryMenuAnchor !== null} anchorEl={this.state.entryMenuAnchor}>
-                            <mui.MenuList style={{ background: 'white', border: '#eee solid 3px', borderRadius: '5px' }}>
+                            <mui.MenuList style={mobileMenuStyle}>
                                 {itemMenu}
                             </mui.MenuList>
                         </mui.Popper>
@@ -559,4 +568,4 @@ class BoardData extends React.Component {
     }
 }
 
-export default routerNavigate(BoardData);
+export default routerNavigate(muiTheme(BoardData));

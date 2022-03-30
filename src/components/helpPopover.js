@@ -27,7 +27,7 @@ class HelpPopover extends React.Component {
                     <mui.Accordion expanded={this.state.accordion1} onChange={_ => this.setState({ accordion1: !this.state.accordion1 })}>
                         <mui.AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <mui.Typography>
-                                Version 1.3.0
+                                Version 1.3.1
                             </mui.Typography>
                         </mui.AccordionSummary>
                         <mui.AccordionDetails>
@@ -45,6 +45,8 @@ class HelpPopover extends React.Component {
                                 - Keine Übergänge mehr auf IOS
                                 <br />
                                 - Menü und Popups funktionieren besser
+                                <br />
+                                - Mobiles Menü im dark mode repariert
                             </mui.Typography>
                         </mui.AccordionDetails>
                     </mui.Accordion>
