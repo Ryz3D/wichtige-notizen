@@ -27,26 +27,26 @@ class HelpPopover extends React.Component {
                     <mui.Accordion expanded={this.state.accordion1} onChange={_ => this.setState({ accordion1: !this.state.accordion1 })}>
                         <mui.AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <mui.Typography>
-                                Version 1.3.1
+                                Version 2.0.0
                             </mui.Typography>
                         </mui.AccordionSummary>
                         <mui.AccordionDetails>
                             <mui.Typography>
-                                - Dark mode
+                                - Bilder-Links werden angezeigt
                                 <br />
-                                - Zeilenumbruch auch bei Links
+                                - Link öffnen nur noch bei Links vorgeschlagen
                                 <br />
-                                - "Öffnen als Link" im Menü
+                                - Bewegbare Listen
                                 <br />
-                                - "Kopieren" im Menü (noch nur Text)
+                                - Boards nach Nutzung sortiert
                                 <br />
-                                - Icons funktionieren Offline
+                                - Online Upload-Anzeiger
                                 <br />
-                                - Keine Übergänge mehr auf IOS
+                                - Löschen von leeren Listen muss nicht mehr bestätigt werden
                                 <br />
-                                - Menü und Popups funktionieren besser
+                                - Neue Formattierung von Elementen
                                 <br />
-                                - Mobiles Menü im dark mode repariert
+                                - Einige Bugs behoben
                             </mui.Typography>
                         </mui.AccordionDetails>
                     </mui.Accordion>

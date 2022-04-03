@@ -215,13 +215,13 @@ class HomePage extends React.Component {
                         </mui.Toolbar>
                     </mui.AppBar>
                     <div style={{ marginBottom: '3vh' }}>
-                        {(this.state.localBoards || {}).length === 0 &&
+                        {this.state.localBoards.length === 0 &&
                             <mui.Alert severity='info'>
                                 Du hast keine Boards
                             </mui.Alert>
                         }
                         <mui.List>
-                            {this.state.localBoards.map((b, i) =>
+                            {this.state.localBoards.reverse().map((b, i) =>
                                 <mui.ListItem divider key={i}>
                                     <mui.ButtonGroup fullWidth>
                                         <LinkButton size='large' variant='outlined' style={btnStyle} url={`/board?id=${b.id}`}>
@@ -253,7 +253,7 @@ class HomePage extends React.Component {
                                 </mui.Box>
                                 :
                                 <mui.List>
-                                    {this.state.sharedBoards.map((b, i) =>
+                                    {this.state.sharedBoards.reverse().map((b, i) =>
                                         <mui.ListItem key={i} divider={i < this.state.sharedBoards.length - 1}>
                                             <mui.ButtonGroup fullWidth>
                                                 <LinkButton size='large' variant='outlined' style={btnStyle} url={`/board?id=${b.id}`}>

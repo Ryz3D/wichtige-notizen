@@ -1,5 +1,5 @@
-import { useTheme } from '@mui/material';
 import React from 'react';
+import { useTheme } from '@mui/material';
 
 export default function muiTheme(Component) {
     return React.forwardRef((props, ref) => {

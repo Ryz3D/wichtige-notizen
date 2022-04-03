@@ -1,5 +1,6 @@
 import React from 'react';
 import * as mui from '@mui/material';
+import './board.css';
 import { Link } from 'react-router-dom';
 import BoardData from '../components/boardData';
 import routerNavigate from '../wrapper/routerNavigate';
@@ -35,6 +36,7 @@ class BoardPage extends React.Component {
             shareOpen: false,
             notification: '',
             lastData: [],
+            uploading: 0,
         };
         this.qrRef = React.createRef();
         this.darkTheme = mui.createTheme({
@@ -62,46 +64,59 @@ class BoardPage extends React.Component {
 
     reloadBoard() {
         const id = new URLSearchParams(window.location.search).get('id');
-        if (id !== null && id !== this.state.id) {
-            this.setState({
-                new: id === null,
-                id: id || '',
-                name: '',
-                data: [],
-                online: false,
-                loading: id !== null,
-                error: '',
-            }, _ => {
-                if (!this.state.new) {
-                    const localData = localStorage.getItem(this.state.id);
-                    if (localData === null) {
-                        onValue(ref(this.db, `${this.state.id}`), v => {
-                            if (v.val() === null) {
-                                this.setState({
-                                    loading: false,
-                                    error: 'Das Board existiert nicht :(',
-                                });
-                            }
-                            else {
-                                this.setState({
-                                    name: v.val().name,
-                                    data: Object.values(v.val().data || {}),
-                                    loading: false,
-                                    online: true,
-                                }, _ => this.addAsShared());
-                            }
-                        });
-                    } else {
-                        const parsedData = JSON.parse(localData);
-                        this.setState({
-                            name: parsedData.name,
-                            data: parsedData.data,
-                            loading: false,
-                            online: false,
-                        });
+        if (id !== this.state.id) {
+            if (id === null) {
+                this.setState({
+                    new: true,
+                    loading: false,
+                    online: false,
+                });
+            }
+            else {
+                this.setState({
+                    new: id === null,
+                    id: id,
+                    name: '',
+                    data: [],
+                    online: false,
+                    loading: id !== null,
+                    error: '',
+                }, _ => {
+                    if (!this.state.new) {
+                        const localData = localStorage.getItem(this.state.id);
+                        if (localData === null) {
+                            onValue(ref(this.db, `${this.state.id}`), v => {
+                                if (v.val() === null) {
+                                    this.setState({
+                                        loading: false,
+                                        error: 'Das Board existiert nicht :(',
+                                    });
+                                }
+                                else {
+                                    this.setState({
+                                        name: v.val().name,
+                                        data: Object.values(v.val().data || {}),
+                                        loading: false,
+                                        online: true,
+                                    }, _ => this.addAsShared());
+                                }
+                            });
+                        } else {
+                            const localBoards = JSON.parse(localStorage.getItem('localBoards')).filter(p => p !== this.state.id);
+                            localBoards.push(this.state.id);
+                            localStorage.setItem('localBoards', JSON.stringify(localBoards));
+
+                            const parsedData = JSON.parse(localData);
+                            this.setState({
+                                name: parsedData.name,
+                                data: parsedData.data,
+                                loading: false,
+                                online: false,
+                            });
+                        }
                     }
-                }
-            });
+                });
+            }
         }
     }
 
@@ -112,7 +127,13 @@ class BoardPage extends React.Component {
             if (localStorage.getItem(this.state.id) !== null) {
                 localStorage.removeItem(this.state.id);
             }
-            set(ref(this.db, this.state.id), { name: this.state.name, data: this.state.data });
+            this.setState({
+                uploading: this.state.uploading + 1,
+            });
+            set(ref(this.db, this.state.id), { name: this.state.name, data: this.state.data })
+                .then(_ => this.setState({
+                    uploading: this.state.uploading - 1,
+                }));
         }
         const svgData = new XMLSerializer().serializeToString(this.qrRef.current.children[0]);
         this.setState({
@@ -139,32 +160,54 @@ class BoardPage extends React.Component {
         });
     }
 
-    onNameKey(e) {
-        if (e.keyCode === 13 && this.state.name.replace(/\W/g, '') !== '') {
-            if (this.state.id === '') {
-                this.setState({
-                    id: uuidv4().replaceAll('-', ''),
-                }, _ => {
-                    this.onDataChange(this.state.data);
-                    this.props.navigate(`/board?id=${this.state.id}`, { replace: true });
-                });
-            }
-            if (this.state.online) {
-                set(ref(this.db, `${this.state.id}/name`), this.state.name);
-            }
-            else {
-                this.onDataChange(this.state.data);
-            }
+    saveNewBoard(newData) {
+        if (this.state.new) {
             this.setState({
-                notification: 'Name gespeichert!',
+                id: uuidv4().replaceAll('-', ''),
+                new: false,
+            }, _ => {
+                this.onDataChange(newData || this.state.data);
+                this.props.navigate(`/board?id=${this.state.id}`, { replace: true });
             });
         }
     }
 
+    saveName() {
+        this.saveNewBoard();
+        if (this.state.online) {
+            this.setState({
+                uploading: this.state.uploading + 1,
+            });
+            set(ref(this.db, `${this.state.id}/name`), this.state.name)
+                .then(_ => this.setState({
+                    uploading: this.state.uploading - 1,
+                }));
+        }
+        else {
+            this.onDataChange(this.state.data);
+        }
+        this.setState({
+            notification: 'Alles gespeichert',
+        });
+    }
+
+    onNameKey(e) {
+        if (e.keyCode === 13 && this.state.name.replace(/\W/g, '') !== '') {
+            this.saveName();
+        }
+    }
+
     onDataChange(data, noHistory) {
+        this.saveNewBoard(data);
         if (this.state.id !== '') {
             if (this.state.online) {
-                set(ref(this.db, `${this.state.id}/data`), data);
+                this.setState({
+                    uploading: this.state.uploading + 1,
+                });
+                set(ref(this.db, `${this.state.id}/data`), data)
+                    .then(_ => this.setState({
+                        uploading: this.state.uploading - 1,
+                    }));
             }
             else {
                 const localBoards = JSON.parse(localStorage.getItem('localBoards'));
@@ -198,6 +241,11 @@ class BoardPage extends React.Component {
             left: '0',
             minWidth: '100vw',
             minHeight: '100vh',
+        };
+        const onlineStyle = {
+            color: this.state.online ? '#0c0' : '',
+            marginLeft: '10px',
+            animation: this.state.uploading > 0 ? 'blinking 700ms linear infinite' : '',
         };
 
         return (
@@ -234,10 +282,7 @@ class BoardPage extends React.Component {
                                             {React.createElement(this.state.online ? CircleIcon : OfflineBoltIcon, {
                                                 fontSize: 'large',
                                                 color: this.state.online ? '' : 'disabled',
-                                                style: {
-                                                    color: this.state.online ? '#0c0' : '',
-                                                    marginLeft: '10px',
-                                                },
+                                                style: onlineStyle,
                                             })}
                                         </mui.Tooltip>
                                     </div>

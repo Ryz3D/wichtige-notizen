@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import routerNavigate from '../wrapper/routerNavigate';
 import muiTheme from '../wrapper/muiTheme';
 import {
+    ArrowLeft as ArrowLeftIcon,
+    ArrowRight as ArrowRightIcon,
     AttachFile as AttachFileIcon,
     BackupTable as BackupTableIcon,
     BorderColor as BorderColorIcon,
@@ -17,81 +19,8 @@ import {
     MoreVert as MoreVertIcon,
     OpenInBrowser as OpenInBrowserIcon,
 } from '@mui/icons-material';
-
-class BoardEntry extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            text: (this.props.data || {}).t,
-        };
-        this.lastText = this.state.text;
-    }
-
-    componentDidUpdate() {
-        if (this.lastText !== (this.props.data || {}).t) {
-            this.lastText = (this.props.data || {}).t;
-            this.setState({
-                text: this.lastText,
-            });
-        }
-    }
-
-    onKey(e) {
-        if (e.keyCode === 13 && e.shiftKey) {
-            e.preventDefault();
-            this.props.save();
-            this.props.onNext();
-            return false;
-        }
-        if (e.keyCode === 27) {
-            this.props.onClear();
-            return false;
-        }
-    }
-
-    onChange(e) {
-        this.setState({
-            text: e.target.value,
-        }, _ => this.props.set({
-            ...this.props.data,
-            t: this.state.text,
-        }));
-    }
-
-    fillIfEmpty(text) {
-        if (text.replace(' ', '')) {
-            return text;
-        }
-        else {
-            return '⠀';
-        }
-    }
-
-    render() {
-        const btnStyle = {
-            textAlign: 'left',
-            textTransform: 'none',
-            lineBreak: 'anywhere',
-        };
-
-        return (
-            <mui.ListItem disablePadding style={{ margin: '16px 8px' }}>
-                <mui.Box width='200px'>
-                    {this.props.edit ?
-                        <mui.TextField autoFocus multiline onKeyDown={e => this.onKey(e)} variant={(this.props.data || {}).h ? 'filled' : 'outlined'}
-                            label='Text' onContextMenu={this.props.onContext} value={this.state.text} onChange={e => this.onChange(e)} />
-                        :
-                        <mui.Button fullWidth style={btnStyle} variant={(this.props.data || {}).h ? 'contained' : 'outlined'}
-                            onContextMenu={this.props.onContext} onClick={this.props.onClick} disabled={this.props.disabled}
-                            color={this.props.thisMove ? 'success' : (this.props.itemMove ? 'warning' : 'primary')}>
-                            {this.fillIfEmpty(this.props.children || (this.props.data || {}).t)}
-                        </mui.Button>
-                    }
-                </mui.Box>
-            </mui.ListItem>
-        );
-    }
-}
+import BoardEntry from './boardEntry';
+import isURL from '../data/isURL';
 
 class BoardData extends React.Component {
     constructor(props) {
@@ -146,38 +75,42 @@ class BoardData extends React.Component {
             newItem = tempData[this.state.menuList].splice(this.state.menuItem, 1)[0];
         }
 
+        const continueWith = _ => {
+            if (shouldMove) {
+                this.setState({
+                    editList: -1,
+                    editItem: -1,
+                    menuList: -1,
+                    menuItem: -1,
+                    entryMenuAnchor: null,
+                    itemMove: false,
+                    justAdded: false,
+                });
+            }
+            else {
+                this.setState({
+                    editList: index,
+                    editItem: newIndex,
+                    menuList: -1,
+                    menuItem: -1,
+                    entryMenuAnchor: null,
+                    editData: null,
+                    justAdded: true,
+                });
+            }
+        };
+
         if (!shouldMove && this.state.editList !== -1 && this.state.editItem !== -1) {
             this.editSave(editedData => {
                 editedData[index].push(newItem);
                 this.props.onDataChange(editedData);
+                continueWith();
             });
         }
         else {
             tempData[index].push(newItem);
             this.props.onDataChange(tempData);
-        }
-
-        if (shouldMove) {
-            this.setState({
-                editList: -1,
-                editItem: -1,
-                menuList: -1,
-                menuItem: -1,
-                entryMenuAnchor: null,
-                itemMove: false,
-                justAdded: false,
-            });
-        }
-        else {
-            this.setState({
-                editList: index,
-                editItem: newIndex,
-                menuList: -1,
-                menuItem: -1,
-                entryMenuAnchor: null,
-                editData: null,
-                justAdded: true,
-            });
+            continueWith();
         }
     }
 
@@ -216,6 +149,7 @@ class BoardData extends React.Component {
             });
         }
         else {
+            this.editSave();
             const editState = {
                 editList: i,
                 editItem: i2,
@@ -257,12 +191,13 @@ class BoardData extends React.Component {
     }
 
     editSave(cb) {
+        var baseData = this.props.data;
         const isEmpty = (this.state.editData || { t: '' }).t.replace(/[ \t\r\n]/g, '') === '';
         if (this.state.editList !== -1 && this.state.editItem !== -1 && (this.state.editData === null ? this.state.justAdded : isEmpty)) {
-            this.editDelete();
+            baseData = this.editDelete();
         }
         if (this.state.editData !== null && !isEmpty) {
-            const tempData = JSON.parse(JSON.stringify(this.props.data));
+            const tempData = JSON.parse(JSON.stringify(baseData));
             tempData[this.state.editList][this.state.editItem] = {
                 ...this.state.editData,
                 t: this.state.editData.t.trim(),
@@ -274,12 +209,18 @@ class BoardData extends React.Component {
                 this.props.onDataChange(tempData, false);
             }
         }
+        else {
+            if (cb) {
+                cb(baseData);
+            }
+        }
     }
 
     editDelete() {
         const tempData = JSON.parse(JSON.stringify(this.props.data));
         tempData[this.state.editList].splice(this.state.editItem, 1);
         this.props.onDataChange(tempData);
+        return tempData;
     }
 
     rootClick(e) {
@@ -347,6 +288,48 @@ class BoardData extends React.Component {
     menuOpen() {
         window.open(this.props.data[this.state.menuList][this.state.menuItem].t, '_blank').focus();
         this.menuClose();
+    }
+
+    moveListL(i) {
+        var tempData = [];
+        if (i === 0) {
+            tempData.push(this.props.data[0]);
+            tempData.push([0]);
+            tempData.push(...this.props.data.slice(1));
+        }
+        else {
+            tempData = JSON.parse(JSON.stringify(this.props.data));
+            const moved = tempData[i];
+            tempData[i] = tempData[i - 1];
+            tempData[i - 1] = moved;
+        }
+        this.props.onDataChange(tempData);
+    }
+
+    moveListR(i) {
+        var tempData = [];
+        if (i === this.props.data.length - 1) {
+            tempData.push(...this.props.data.slice(0, this.props.data.length - 1));
+            tempData.push([0]);
+            tempData.push(this.props.data[this.props.data.length - 1]);
+        }
+        else {
+            tempData = JSON.parse(JSON.stringify(this.props.data));
+            const moved = tempData[i];
+            tempData[i] = tempData[i + 1];
+            tempData[i + 1] = moved;
+        }
+        this.props.onDataChange(tempData);
+    }
+
+    promptDeleteList(i) {
+        this.setState({
+            deleteList: i,
+        }, _ => {
+            if (this.props.data[i].length === 1) {
+                this.deleteList();
+            }
+        });
     }
 
     deleteList() {
@@ -449,7 +432,6 @@ class BoardData extends React.Component {
             overflow: 'auto',
         };
 
-        console.log(this.props.theme.palette)
         const mobileMenuStyle = {
             background: this.props.theme.palette.background.default,
             border: this.props.theme.palette.action.disabledBackground + ' solid 2px',
@@ -457,19 +439,22 @@ class BoardData extends React.Component {
             color: this.props.theme.palette.text.primary,
         };
 
+        const menuText = ((this.props.data[this.state.menuList] || [])[this.state.menuItem] || {}).t;
         const itemMenu = [
-            [<DeleteIcon />, 'Löschen', _ => this.menuDelete()],
+            isURL(menuText) ? [<OpenInBrowserIcon />, 'Link öffnen', _ => this.menuOpen()] : null,
+            [<ContentPasteIcon />, 'Kopieren', _ => this.menuClip()],
             [<BorderColorIcon />, 'Markieren', _ => this.menuHighlight()],
             [<ControlCameraIcon />, 'Verschieben', _ => this.menuMove()],
-            [<ContentPasteIcon />, 'Kopieren', _ => this.menuClip()],
-            [<OpenInBrowserIcon />, 'Als Link öffnen', _ => this.menuOpen()],
+            [<DeleteIcon />, 'Löschen', _ => this.menuDelete()],
         ].map((e, i) =>
-            <mui.MenuItem className='notRoot' key={i} onClick={e[2]}>
-                <mui.ListItemIcon>
-                    {e[0]}
-                </mui.ListItemIcon>
-                {e[1]}
-            </mui.MenuItem>
+            e !== null && (
+                <mui.MenuItem className='notRoot' key={i} onClick={e[2]}>
+                    <mui.ListItemIcon>
+                        {e[0]}
+                    </mui.ListItemIcon>
+                    {e[1]}
+                </mui.MenuItem>
+            )
         );
 
         return (
@@ -483,30 +468,34 @@ class BoardData extends React.Component {
                                         set={d => this.editSet(d)} save={_ => this.editSave()} edit={this.state.editList === i && this.state.editItem === i2} data={e} itemMove={this.state.itemMove}
                                         thisMove={(this.state.entryMenuAnchor !== null || this.state.itemMove) && i === this.state.menuList && i2 === this.state.menuItem} />
                             )}
-                            <BoardEntry itemMove={this.state.itemMove} onClick={_ => this.addItem(i)}>
-                                {this.state.itemMove ?
+                            <BoardEntry solid itemMove={this.state.itemMove} onClick={_ => this.addItem(i)}
+                                text={this.state.itemMove ?
                                     'Ranhängen'
                                     :
                                     '+ Notiz'
-                                }
-                            </BoardEntry>
+                                } />
                             <mui.ListItem>
-                                <mui.Box width='200px' display='flex'>
-                                    <mui.IconButton style={{ margin: 'auto' }} onClick={_ => this.setState({ deleteList: i })}>
+                                <mui.Box width='200px' display='flex' style={{ justifyContent: 'center' }}>
+                                    <mui.IconButton onClick={_ => this.moveListL(i)}>
+                                        <ArrowLeftIcon />
+                                    </mui.IconButton>
+                                    <mui.IconButton onClick={_ => this.promptDeleteList(i)}>
                                         <DeleteIcon />
+                                    </mui.IconButton>
+                                    <mui.IconButton onClick={_ => this.moveListR(i)}>
+                                        <ArrowRightIcon />
                                     </mui.IconButton>
                                 </mui.Box>
                             </mui.ListItem>
                         </mui.List>
                     )}
                     <mui.List>
-                        <BoardEntry itemMove={this.state.itemMove} onClick={_ => this.addList()}>
-                            {this.state.itemMove ?
+                        <BoardEntry solid itemMove={this.state.itemMove} onClick={_ => this.addList()}
+                            text={this.state.itemMove ?
                                 'In neue Liste'
                                 :
                                 '+ Liste'
-                            }
-                        </BoardEntry>
+                            } />
                     </mui.List>
                 </mui.Stack>
                 {isMobile ?
