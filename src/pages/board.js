@@ -4,7 +4,7 @@ import './board.css';
 import { Link } from 'react-router-dom';
 import BoardData from '../components/boardData';
 import routerNavigate from '../wrapper/routerNavigate';
-import { getDatabase, ref, onValue, set } from 'firebase/database';
+import { getDatabase, ref, onValue, set, remove } from 'firebase/database';
 import QRCode from "react-qr-code";
 import { Buffer } from 'buffer';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,6 +15,7 @@ import {
     ArrowBackRounded as ArrowBackRoundedIcon,
     Circle as CircleIcon,
     Close as CloseIcon,
+    Delete as DeleteIcon,
     OfflineBolt as OfflineBoltIcon,
     Share as ShareIcon,
     Undo as UndoIcon,
@@ -233,6 +234,18 @@ class BoardPage extends React.Component {
         }
     }
 
+    permaDelete() {
+        if (this.state.online) {
+            const sharedBoards = JSON.parse(localStorage.getItem('sharedBoards')).filter(p => p !== this.state.id);
+            localStorage.setItem('sharedBoards', JSON.stringify(sharedBoards));
+            this.setState({
+                uploading: this.state.uploading + 1,
+            });
+            remove(ref(this.db, this.state.id))
+                .then(_ => window.location.href = '/');
+        }
+    }
+
     render() {
         const rootStyle = {
             backgroundColor: this.props.theme.palette.background.default,
@@ -324,6 +337,45 @@ class BoardPage extends React.Component {
                         <BoardData name={this.state.name} data={this.state.data} onDataChange={data => this.onDataChange(data)} />
                     }
 
+                    {this.state.online && this.state.data.length === 0 &&
+                        <mui.Card style={{ width: '75%', margin: '20vh auto', padding: '20px' }}>
+                            <mui.Typography variant='h2' fontSize='2rem' color='GrayText'>
+                                Willst du dieses online Board permanent löschen?
+                                <mui.Typography fontSize='0.75rem'>
+                                    <i>Ist halt nix drin</i>
+                                </mui.Typography>
+                            </mui.Typography>
+                            <mui.Button fullWidth style={{ marginTop: '15px' }} onClick={_ => this.setState({ permaPrompt: true })}
+                                variant='outlined' size='large' color='error' startIcon={<DeleteIcon />}>
+                                Für immer löschen
+                            </mui.Button>
+                        </mui.Card>
+                    }
+
+                    <mui.Popover open={this.state.permaPrompt} BackdropProps onClose={_ => this.setState({ permaPrompt: false })}
+                        anchorOrigin={{ horizontal: 'center', vertical: 'top' }}
+                        transformOrigin={{ horizontal: 'center', vertical: 'top' }}>
+                        <mui.Box padding='20px'>
+                            <mui.Typography variant='h4' color='error'>
+                                Sicher?
+                            </mui.Typography>
+                            <br />
+                            Wenn du ein neues Board erstellst musst du wieder allen den Link schicken.
+                            <br />
+                            <mui.Box marginTop='20px'>
+                                <mui.ButtonGroup>
+                                    <mui.Button variant='outlined' onClick={_ => this.setState({ permaPrompt: false })}>
+                                        Abbrechen
+                                    </mui.Button>
+                                    <mui.Button variant='contained' color='error' onClick={_ => this.permaDelete()}
+                                        startIcon={<DeleteIcon />}>
+                                        Vernichten
+                                    </mui.Button>
+                                </mui.ButtonGroup>
+                            </mui.Box>
+                        </mui.Box>
+                    </mui.Popover>
+
                     <mui.Popover open={this.state.shareOpen} onClose={_ => this.setState({ shareOpen: false })} BackdropProps
                         anchorOrigin={{ horizontal: 'center', vertical: 'top' }}
                         transformOrigin={{ horizontal: 'center', vertical: 'top' }}>
@@ -351,7 +403,7 @@ class BoardPage extends React.Component {
                     <mui.Popover open={this.state.error !== ''} BackdropProps
                         anchorOrigin={{ horizontal: 'center', vertical: 'top' }}
                         transformOrigin={{ horizontal: 'center', vertical: 'top' }}>
-                        <mui.Box padding='40px'>
+                        <mui.Box padding='20px'>
                             <mui.Typography variant='h4' color='error'>
                                 Error
                             </mui.Typography>

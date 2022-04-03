@@ -27,7 +27,7 @@ class HelpPopover extends React.Component {
                     <mui.Accordion expanded={this.state.accordion1} onChange={_ => this.setState({ accordion1: !this.state.accordion1 })}>
                         <mui.AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <mui.Typography>
-                                Version 2.0.0
+                                Version 2.0.1
                             </mui.Typography>
                         </mui.AccordionSummary>
                         <mui.AccordionDetails>
@@ -47,6 +47,8 @@ class HelpPopover extends React.Component {
                                 - Neue Formattierung von Elementen
                                 <br />
                                 - Einige Bugs behoben
+                                <br />
+                                - Permanentes Löschen von (leeren) geteilten Boards
                             </mui.Typography>
                         </mui.AccordionDetails>
                     </mui.Accordion>
@@ -64,6 +66,8 @@ class HelpPopover extends React.Component {
                                 <br />
                                 <br />
                                 <b>Geteilte Boards</b> werden auf einem zentralen Server gespeichert. Da es keine Accounts gibt, kann jeder mit dem Link das Board bearbeiten. Will man das Board sichern, kann man eine Kopie als lokales Board machen (oder ein .csv Backup).
+                                <br />
+                                Der Löschen-Knopf auf der Homepage löscht das Board von dem aktuellen Gerät, zum hinzufügen muss nur der Board-Link einmal geöffnet werden. Zum permanenten Löschen eines geteilten Boards müssen alle Listen gelöscht werden und das Löschen bestätigt werden.
                                 <br />
                                 Um die Daten von einem lokalen Board in ein geteiltes Board zu kopieren, kann ein .csv Export von dem lokalen Board gemacht werden und im geteilten Board importiert werden.
                             </mui.Typography>

@@ -9,28 +9,23 @@ class BoardEntry extends React.Component {
             text: (this.props.data || {}).t,
             showImg: false,
         };
-        this.lastText = this.state.text;
+        this.lastTextProp = this.state.text;
         this.inputRef = React.createRef();
     }
 
     componentDidMount() {
-        if (this.props.edit) {
-            this.setCursorEnd();
-            this.lastEdit = this.props.edit;
-        }
+        this.setCursorEnd();
     }
 
     componentDidUpdate() {
-        if (this.lastText !== (this.props.data || {}).t) {
-            this.lastText = (this.props.data || {}).t;
+        if (this.lastTextProp !== (this.props.data || {}).t) {
             this.setState({
-                text: this.lastText,
+                text: (this.props.data || {}).t,
+                showImg: false,
             });
+            this.lastTextProp = (this.props.data || {}).t;
         }
-        if (this.lastEdit !== this.props.edit) {
-            this.setCursorEnd();
-            this.lastEdit = this.props.edit;
-        }
+        this.setCursorEnd();
     }
 
     setCursorEnd() {
@@ -110,14 +105,14 @@ class BoardEntry extends React.Component {
                             onContextMenu={this.props.onContext} onClick={this.props.onClick} disabled={this.props.disabled}
                             color={this.props.thisMove ? 'success' : (this.props.itemMove ? 'warning' : 'primary')}>
                             <mui.List disablePadding style={{ width: '100%', pointerEvents: 'none' }}>
-                                {isURL(this.lastText) &&
+                                {isURL(this.state.text) &&
                                     <mui.ImageListItem style={imgListItemStyle}>
-                                        <img ref={this.imgRef} alt='' src={this.lastText} onLoad={_ => this.setState({ showImg: true })} />
+                                        <img ref={this.imgRef} alt='' src={this.state.text} onLoad={_ => this.setState({ showImg: true })} />
                                     </mui.ImageListItem>
                                 }
                                 {!this.state.showImg &&
                                     <div style={textStyle}>
-                                        {this.props.text || this.transformText(this.lastText)}
+                                        {this.props.text || this.transformText(this.state.text)}
                                     </div>
                                 }
                             </mui.List>

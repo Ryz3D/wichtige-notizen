@@ -238,6 +238,8 @@ class BoardData extends React.Component {
 
     menuClose() {
         this.setState({
+            editList: -1,
+            editItem: -1,
             entryMenuAnchor: null,
         });
     }
@@ -273,6 +275,8 @@ class BoardData extends React.Component {
 
     menuMove() {
         this.setState({
+            editList: -1,
+            editItem: -1,
             itemMove: true,
             entryMenuAnchor: null,
         });
